@@ -1,0 +1,23 @@
+services:
+  balancer:
+    image: otus-php-hw04/balancer:latest
+
+  nginx-backend1:
+    image: otus-php-hw04/nginx-backend:latest
+
+  nginx-backend2:
+    image: otus-php-hw04/nginx-backend:latest
+
+  php-fpm1:
+    image: otus-php-hw04/php-fpm:latest
+    environment:
+      - APP_ENV=production
+
+  php-fpm2:
+    image: otus-php-hw04/php-fpm:latest
+    environment:
+      - APP_ENV=production
+
+  redis:
+    image: redis:alpine
+

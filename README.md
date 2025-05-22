@@ -19,15 +19,24 @@
 ```
 project-root/
 ├── docker/
-│   ├── nginx/
-│   └── php/
-├── public/
-│   └── index.php
-├── src/
+│   ├── nginx/                 # Конфигурация nginx-балансировщика
+│   │   └── nginx.conf
+│   ├── php/                   # Dockerfile и конфиги PHP-FPM
+│   │   └── Dockerfile
+│   ├── app1/                  # Первый php+nginx бекенд
+│   │   ├── nginx.conf
+│   │   └── Dockerfile
+│   ├── app2/                  # Второй php+nginx бекенд
+│   │   ├── nginx.conf
+│   │   └── Dockerfile
+│   └── redis/                 # (опционально, если будешь использовать собственный конфиг)
+├── public/                    # Корневая директория, расшариваемая для PHP и Nginx
+│   └── index.php              # Обработка POST-запроса и валидация строки
+├── src/                       # Дополнительная логика, классы, автозагрузка
+│   └── Validator.php
 ├── .gitignore
-├── Dockerfile
-├── docker-compose.yml
 ├── composer.json
+├── docker-compose.yml         # Собирает все сервисы: балансировщик, php-бэкенды, redis
 └── README.md
 ```
 
