@@ -40,8 +40,7 @@ services:
         - FPM_CONF=www-fpm1.conf
     networks:
       - otus-hw04
-    depends_on:
-      - redis
+      - redis-cluster-net
     volumes:
       - php_fpm_socket1:/var/run/php
     container_name: php-fpm1
@@ -54,21 +53,17 @@ services:
         - FPM_CONF=www-fpm2.conf
     networks:
       - otus-hw04
-    depends_on:
-      - redis
+      - redis-cluster-net
     volumes:
       - php_fpm_socket2:/var/run/php
     container_name: php-fpm2
 
-  redis:
-    image: redis:alpine
-    networks:
-      - otus-hw04
-    container_name: redis
-
 networks:
   otus-hw04:
     driver: bridge
+
+  redis-cluster-net:
+    external: true
 
 volumes:
   php_fpm_socket1:

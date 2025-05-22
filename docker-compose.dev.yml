@@ -43,8 +43,3 @@ services:
     image: otus-php-hw04/php-fpm:latest
     volumes:
       - php_fpm_socket2:/var/run/php
-
-  redis:
-    image: redis:alpine
-    ports:
-      - "6379:6379"
