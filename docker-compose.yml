@@ -6,6 +6,7 @@ services:
     depends_on:
       - nginx-backend1
       - nginx-backend2
+      - frontend
     ports:
       - "80:80"
     networks:
@@ -57,6 +58,13 @@ services:
     volumes:
       - php_fpm_socket2:/var/run/php
     container_name: php-fpm2
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/vue.prod.Dockerfile
+    networks:
+      - otus-hw04
 
 networks:
   otus-hw04:

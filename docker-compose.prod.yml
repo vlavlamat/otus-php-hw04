@@ -1,19 +1,22 @@
 services:
   balancer:
-    image: otus-php-hw04/balancer:latest
+    image: vlavlamat/balancer:prod
 
   nginx-backend1:
-    image: otus-php-hw04/nginx-backend:latest
+    image: vlavlamat/nginx-backend:prod
 
   nginx-backend2:
-    image: otus-php-hw04/nginx-backend:latest
+    image: vlavlamat/nginx-backend:prod
 
   php-fpm1:
-    image: otus-php-hw04/php-fpm:latest
+    image: vlavlamat/php-fpm:prod
     environment:
       - APP_ENV=production
 
   php-fpm2:
-    image: otus-php-hw04/php-fpm:latest
+    image: vlavlamat/php-fpm:prod
     environment:
       - APP_ENV=production
+
+  frontend:
+    image: vlavlamat/vue:prod

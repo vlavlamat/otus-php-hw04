@@ -43,3 +43,15 @@ services:
     image: otus-php-hw04/php-fpm:latest
     volumes:
       - php_fpm_socket2:/var/run/php
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/vue.dev.Dockerfile
+    image: otus-php-hw04/vue:latest
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+
