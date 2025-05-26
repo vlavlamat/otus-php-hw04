@@ -18,14 +18,11 @@ services:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./public:/app/public
-      - php_fpm_socket1:/var/run/php
 
   nginx-backend2:
     # 🔁 Используем готовый образ без повторной сборки
     # Без volumes, чтобы не создавать конфликтов в dev-окружении
     image: otus-php-hw04/nginx-backend:latest
-    volumes:
-      - php_fpm_socket2:/var/run/php
 
   php-fpm1:
     build:
@@ -35,14 +32,11 @@ services:
     volumes:
       - ./src:/app/src
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini
-      - php_fpm_socket1:/var/run/php
     environment:
       - COMPOSER_HOME=/var/www/.composer
 
   php-fpm2:
     image: otus-php-hw04/php-fpm:latest
-    volumes:
-      - php_fpm_socket2:/var/run/php
 
   frontend:
     build:

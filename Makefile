@@ -56,8 +56,12 @@ dev-logs:
 # ────────────────────────────────
 
 # Подтягиваем готовые образы из Docker Hub и запускаем
-prod-up:
+prod-pull-up:
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Запускаем прод-окружение
+prod-up:
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Останавливаем прод-окружение
@@ -75,8 +79,8 @@ prod-logs:
 # Локально билдим prod-образы с INSTALL_DEV=false (без dev-зависимостей)
 prod-build-local:
 	docker build --build-arg INSTALL_DEV=false -f docker/php/php.Dockerfile -t $(REGISTRY_USER)/php-fpm:prod .
-	docker build --build-arg INSTALL_DEV=false -f docker/nginx/nginx-backend.Dockerfile -t $(REGISTRY_USER)/nginx-backend:prod .
-	docker build --build-arg INSTALL_DEV=false -f docker/balancer/balancer.Dockerfile -t $(REGISTRY_USER)/balancer:prod .
+	docker build -f docker/nginx/nginx.Dockerfile -t $(REGISTRY_USER)/nginx-backend:prod .
+	docker build -f docker/balancer/balancer.Dockerfile -t $(REGISTRY_USER)/balancer:prod .
 	# для фронтенда используем отдельный prod Dockerfile
 	docker build -f docker/frontend/vue.prod.Dockerfile -t $(REGISTRY_USER)/vue:prod .
 

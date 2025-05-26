@@ -16,10 +16,7 @@ RUN rm -f \
 COPY ./docker/php/php.ini /usr/local/etc/php/conf.d/local.ini
 COPY ./docker/php/php-fpm.conf /usr/local/etc/php-fpm.conf
 COPY ./docker/php/conf.d/ /usr/local/etc/php/conf.d/
-
-# 👇 Используем переменную сборки для выбора FPM-конфига
-ARG FPM_CONF=www.conf
-COPY ./docker/php/${FPM_CONF} /usr/local/etc/php-fpm.d/www.conf
+COPY ./docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 
 # Копируем бинарник Composer из официального образа
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

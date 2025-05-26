@@ -22,7 +22,7 @@
     </div>
 
     <!-- Кнопка отправки строки на проверку -->
-    <button class="submit-button" @click="submit">Отправить</button>
+    <button class="submit-button" @click="submit">Проверить</button>
 
     <!-- Блок вывода результата -->
     <div class="output">

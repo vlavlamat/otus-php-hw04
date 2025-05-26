@@ -37,8 +37,6 @@ services:
     build:
       context: .
       dockerfile: docker/php/php.Dockerfile
-      args:
-        - FPM_CONF=www-fpm1.conf
     networks:
       - otus-hw04
       - redis-cluster-net
@@ -50,8 +48,6 @@ services:
     build:
       context: .
       dockerfile: docker/php/php.Dockerfile
-      args:
-        - FPM_CONF=www-fpm2.conf
     networks:
       - otus-hw04
       - redis-cluster-net
