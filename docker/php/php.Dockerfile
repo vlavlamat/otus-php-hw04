@@ -25,7 +25,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 
 # ⏩ Копируем composer файлы отдельно (для кеша)
-COPY composer.json ./
+COPY composer.json composer.lock ./
 
 # ⏩ Передаём аргумент для управления dev/prod-зависимостями
 ARG INSTALL_DEV=false
