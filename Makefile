@@ -61,10 +61,10 @@ prod-logs:
 
 prod-build:
 	docker buildx create --use || true
-	docker buildx build --platform linux/amd64,linux/arm64 --push --build-arg INSTALL_DEV=false -f docker/php/php.Dockerfile -t $(REGISTRY_USER)/php-fpm:prod .
-	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/nginx/nginx.Dockerfile -t $(REGISTRY_USER)/nginx-backend:prod .
-	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/balancer/balancer.Dockerfile -t $(REGISTRY_USER)/balancer:prod .
-	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/frontend/vue.prod.Dockerfile -t $(REGISTRY_USER)/vue:prod .
+	docker buildx build --platform linux/amd64,linux/arm64 --push --build-arg INSTALL_DEV=false -f docker/php/php.Dockerfile -t $(REGISTRY_USER)/php-fpm-hw04:prod .
+	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/nginx/nginx.Dockerfile -t $(REGISTRY_USER)/nginx-backend-hw04:prod .
+	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/balancer/balancer.Dockerfile -t $(REGISTRY_USER)/balancer-hw04:prod .
+	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/frontend/vue.prod.Dockerfile -t $(REGISTRY_USER)/vue-hw04:prod .
 
 # ────────────────────────────────
 # Утилиты
