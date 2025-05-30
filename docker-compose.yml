@@ -11,7 +11,7 @@ services:
       - "8001:80"
     networks:
       - otus-hw04
-    container_name: balancer
+    container_name: balancer-hw04
 
   nginx-backend1:
     build:
@@ -21,7 +21,7 @@ services:
       - otus-hw04
     volumes:
       - php_fpm_socket1:/var/run/php
-    container_name: nginx-backend1
+    container_name: nginx-backend1-hw04
 
   nginx-backend2:
     build:
@@ -31,7 +31,7 @@ services:
       - otus-hw04
     volumes:
       - php_fpm_socket2:/var/run/php
-    container_name: nginx-backend2
+    container_name: nginx-backend2-hw04
 
   php-fpm1:
     build:
@@ -42,7 +42,7 @@ services:
       - redis-cluster-net
     volumes:
       - php_fpm_socket1:/var/run/php
-    container_name: php-fpm1
+    container_name: php-fpm1-hw04
 
   php-fpm2:
     build:
@@ -53,7 +53,7 @@ services:
       - redis-cluster-net
     volumes:
       - php_fpm_socket2:/var/run/php
-    container_name: php-fpm2
+    container_name: php-fpm2-hw04
 
   frontend:
     build:
@@ -61,6 +61,7 @@ services:
       dockerfile: docker/frontend/vue.prod.Dockerfile
     networks:
       - otus-hw04
+    container_name: vue-frontend-hw04
 
 networks:
   otus-hw04:
