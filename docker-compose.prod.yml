@@ -2,8 +2,6 @@ services:
   balancer:
     image: vlavlamat/balancer-hw04:prod
     restart: always
-    ports:
-      - "8001:80"
 
   nginx-backend1:
     image: vlavlamat/nginx-backend-hw04:prod
