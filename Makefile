@@ -1,6 +1,6 @@
 # Указываем, что эти цели (targets) не являются файлами,
 # а просто именованными действиями, которые всегда должны выполняться.
-.PHONY: prod-up prod-down prod-logs ps
+.PHONY: prod-up prod-down prod-logs ps prod-update prod-clean
 
 # ────────────────────────────────
 # Переменные
@@ -23,9 +23,26 @@ prod-logs:
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f --tail=100
 
 # ────────────────────────────────
-# Утилиты
+# Обновление образов и контейнеров
 # ────────────────────────────────
 
+prod-update:
+	docker pull $(REGISTRY_USER)/php-fpm-hw04:prod
+	docker pull $(REGISTRY_USER)/nginx-backend-hw04:prod
+	docker pull $(REGISTRY_USER)/balancer-hw04:prod
+	docker pull $(REGISTRY_USER)/vue-hw04:prod
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# ────────────────────────────────
+# Очистка старых dangling-образов
+# ────────────────────────────────
+
+prod-clean:
+	docker image prune -f
+
+# ────────────────────────────────
 # Список запущенных контейнеров и их статуса
+# ────────────────────────────────
+
 ps:
 	docker compose ps
