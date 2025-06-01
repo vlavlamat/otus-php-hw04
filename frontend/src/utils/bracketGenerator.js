@@ -1,6 +1,6 @@
 // Функция генерации валидной (корректной) скобочной строки
 export function generateValidBracketString(maxLength = 20) {
-    const pairs = Math.floor(Math.random() * (maxLength / 2 - 1)) + 1 // выбираем случайное количество пар скобок (минимум 1 пара)
+    const pairs = Math.floor(Math.random() * (maxLength / 2)) + 1 // выбираем случайное количество пар скобок (минимум 1 пара)
     let result = '' // результирующая строка
     let open = 0 // количество открытых скобок, которые нужно закрыть
 
