@@ -36,12 +36,12 @@ try {
     }
 
 // Ловим исключения валидации (например, пустая строка)
-} catch (\InvalidArgumentException $e) {
+} catch (InvalidArgumentException $e) {
     http_response_code(400); // 400 Bad Request
     echo json_encode(['error' => $e->getMessage()]);
 
 // Ловим все остальные ошибки
-} catch (\Throwable $e) {
+} catch (Throwable $e) {
     http_response_code(500); // 500 Internal Server Error
     echo json_encode(['error' => $e->getMessage()]);
 }
