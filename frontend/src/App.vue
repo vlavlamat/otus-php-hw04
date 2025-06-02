@@ -114,12 +114,6 @@ h1 {
   text-align: center; /* центрирование текста */
 }
 
-/* Блок переключателей режима (сейчас не используется, но оставлен в стилях) */
-.mode-select {
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
 .mode-select label {
   margin: 0 1rem; /* отступы между label */
   font-size: 1.2rem;
