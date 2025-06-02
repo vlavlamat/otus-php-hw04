@@ -12,5 +12,8 @@
       "email": "vlavlamat@icloud.com"
     }
   ],
-  "require": {}
+  "require": {
+    "php": "^8.3",
+    "ext-redis": "*"
+  }
 }

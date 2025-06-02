@@ -70,7 +70,7 @@ const submit = async () => {
         const errorMessage = error.response.data.error || ''
         // Если ошибка о пустом вводе
         if (errorMessage.includes('Empty input')) {
-          result.value = 'Строка пуста! Status: 400 Bad Request.'
+          result.value = 'Пустая строка! Status: 400 Bad Request.'
         } else {
           result.value = 'Некорректная строка! Status: 400 Bad Request.'
         }
@@ -87,7 +87,7 @@ const submit = async () => {
 const answerClass = computed(() => {
   if (result.value.startsWith('Корректная строка')) {
     return 'correct' // зелёный цвет
-  } else if (result.value.startsWith('Некорректная строка') || result.value.startsWith('Строка пуста')) {
+  } else if (result.value.startsWith('Некорректная строка') || result.value.startsWith('Пустая строка')) {
     return 'incorrect' // красный цвет
   } else {
     return 'neutral' // чёрный цвет
