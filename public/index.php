@@ -6,6 +6,9 @@ require __DIR__ . '/../vendor/autoload.php';
 // Подключаем класс Validator из пространства имен App
 use App\Validator;
 
+// Добавим работу с сессиями
+session_start(); // ← автоматически использует RedisCluster!
+
 // Устанавливаем заголовок ответа как JSON
 header('Content-Type: application/json');
 
