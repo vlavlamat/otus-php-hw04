@@ -9,6 +9,10 @@ use App\Validator;
 // Добавим работу с сессиями
 session_start(); // ← автоматически использует RedisCluster!
 
+// Счётчик запросов в сессии
+$_SESSION['request_count'] = ($_SESSION['request_count'] ?? 0) + 1;
+$_SESSION['last_request'] = date('Y-m-d H:i:s');
+
 // Устанавливаем заголовок ответа как JSON
 header('Content-Type: application/json');
 
