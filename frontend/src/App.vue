@@ -4,7 +4,7 @@
 
     <!-- Поле ввода строки (вручную или сгенерированной) -->
     <div class="input-block">
-      <div class="output-title">Строка (или сгенерированная):</div>
+      <div class="output-title">Строка:</div>
       <input
           type="text"
           v-model="manualString"
@@ -61,13 +61,19 @@ const submit = async () => {
   const stringToSend = manualString.value
 
   try {
-    // Отправляем POST-запрос на /api/ с параметром string
-    const response = await axios.post('/api/', new URLSearchParams({string: stringToSend}))
+    // Отправляем POST-запрос на /api/validate с JSON
+    const response = await axios.post('/api/validate', {
+      string: stringToSend
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
     result.value = 'Корректная строка! Status: 200 OK.' // если успешно
   } catch (error) {
     if (error.response) {
       if (error.response.status === 400) {
-        const errorMessage = error.response.data.error || ''
+        const errorMessage = error.response.data.message || ''
         // Если ошибка о пустом вводе
         if (errorMessage.includes('Empty input')) {
           result.value = 'Пустая строка! Status: 400 Bad Request.'
