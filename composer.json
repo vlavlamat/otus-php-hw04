@@ -1,7 +1,7 @@
 {
   "name": "vlavlamat/otus-php-hw04",
   "version": "1.0.0",
-  "description": "Homework #4: Bracket validator",
+  "description": "Homework #4: Bracket validation service",
   "type": "project",
   "autoload": {
     "psr-4": {
@@ -16,6 +16,7 @@
   ],
   "require": {
     "php": ">=7.4",
-    "ext-redis": "*"
+    "ext-redis": "*",
+    "ext-json": "*"
   }
 }

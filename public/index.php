@@ -3,8 +3,15 @@
 // Подключаем автозагрузчик Composer
 require __DIR__ . '/../vendor/autoload.php';
 
-// Подключаем класс Validator из пространства имен App
+// Подключаем классы из пространства имен App
 use App\Validator;
+use App\Router;
+
+// Устанавливаем заголовки для JSON API
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
 
 // Добавим работу с сессиями
 session_start(); // ← автоматически использует RedisCluster!
@@ -13,42 +20,91 @@ session_start(); // ← автоматически использует RedisClu
 $_SESSION['request_count'] = ($_SESSION['request_count'] ?? 0) + 1;
 $_SESSION['last_request'] = date('Y-m-d H:i:s');
 
-// Устанавливаем заголовок ответа как JSON
-header('Content-Type: application/json');
-
-try {
-    // Проверяем, что запрос пришёл методом POST
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405); // 405 Method Not Allowed
-        echo json_encode(['error' => 'Method Not Allowed']);
-        exit;
-    }
-
-    // Получаем параметр 'string' из POST-запроса
-    $string = $_POST['string'] ?? null;
-
-    // Если параметр отсутствует, возвращаем ошибку 400
-    if ($string === null) {
-        http_response_code(400); // 400 Bad Request
-        echo json_encode(['error' => 'Missing "string" parameter']);
-        exit;
-    }
-
-    // Проверяем строку с помощью валидатора
-    if (Validator::validate($string)) {
-        echo json_encode(['message' => 'OK']); // строка корректна
-    } else {
-        http_response_code(400); // 400 Bad Request
-        echo json_encode(['message' => 'Bad request']); // строка некорректна
-    }
-
-// Ловим исключения валидации (например, пустая строка)
-} catch (InvalidArgumentException $e) {
-    http_response_code(400); // 400 Bad Request
-    echo json_encode(['error' => $e->getMessage()]);
-
-// Ловим все остальные ошибки
-} catch (Throwable $e) {
-    http_response_code(500); // 500 Internal Server Error
-    echo json_encode(['error' => $e->getMessage()]);
+// Обрабатываем preflight запросы
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
 }
+
+$router = new Router();
+
+// Маршрут для валидации скобок
+$router->addRoute('POST', '/api/validate', function () {
+    try {
+        // Получаем JSON из тела запроса
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            http_response_code(400);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Invalid JSON format',
+                'error_code' => 'INVALID_JSON'
+            ]);
+            return;
+        }
+
+        if (!isset($data['string'])) {
+            http_response_code(400);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Missing required parameter',
+                'error_code' => 'MISSING_PARAMETER',
+                'field' => 'string'
+            ]);
+            return;
+        }
+
+        $string = $data['string'];
+
+        if (Validator::validate($string)) {
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Valid bracket sequence',
+                'valid' => true
+            ]);
+        } else {
+            http_response_code(400);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Invalid bracket sequence',
+                'error_code' => 'INVALID_SEQUENCE',
+                'valid' => false
+            ]);
+        }
+
+    } catch (InvalidArgumentException $e) {
+        http_response_code(400);
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'error_code' => 'VALIDATION_ERROR',
+            'valid' => false
+        ]);
+    } catch (Throwable $e) {
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Internal server error',
+            'error_code' => 'INTERNAL_ERROR'
+        ]);
+    }
+});
+
+// Маршрут для проверки статуса системы
+$router->addRoute('GET', '/api/status', function () {
+    echo json_encode([
+        'status' => 'OK',
+        'service' => 'bracket-validator',
+        'version' => '1.0.0',
+        'timestamp' => date('c'),
+        'server' => gethostname()
+    ]);
+});
+
+// Диспетчеризация запроса
+$method = $_SERVER['REQUEST_METHOD'];
+$uri = $_SERVER['REQUEST_URI'];
+
+$router->dispatch($method, $uri);
