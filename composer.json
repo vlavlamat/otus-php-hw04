@@ -8,6 +8,11 @@
       "App\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
   "authors": [
     {
       "name": "Vladimir Matkovskii",
@@ -18,5 +23,8 @@
     "php": ">=7.4",
     "ext-redis": "*",
     "ext-json": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.0"
   }
 }

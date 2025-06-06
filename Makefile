@@ -73,3 +73,15 @@ prod-build:
 # Список запущенных контейнеров и их статуса
 ps:
 	docker compose ps
+
+# ────────────────────────────────
+# Тестирование
+# ────────────────────────────────
+
+# Запуск тестов в контейнере
+test:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec php-fpm1 vendor/bin/phpunit
+
+# Запуск тестов с покрытием кода
+test-coverage:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec php-fpm1 vendor/bin/phpunit --coverage-html ./coverage
