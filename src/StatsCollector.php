@@ -42,4 +42,22 @@ class StatsCollector
             )
         ];
     }
+
+    /**
+     * Check if Redis Cluster is connected
+     *
+     * @return bool True if connected, false otherwise
+     */
+    public function isConnected(): bool
+    {
+        try {
+            // Attempt to ping the Redis Cluster
+            // The ping method requires a node name as an argument
+            // The ping method returns 1 (as integer or string) if successful
+            $pingResult = $this->cluster->ping('redis-node1:6379');
+            return $pingResult == 1 || $pingResult === '+PONG' || $pingResult === true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 }

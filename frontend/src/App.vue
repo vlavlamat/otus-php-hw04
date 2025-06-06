@@ -34,12 +34,17 @@
         </div>
       </div>
     </div>
+
+    <!-- Индикатор статуса Redis Cluster -->
+    <div class="redis-status">
+      Redis Cluster: <span :class="redisStatusClass">{{ redisStatus }}</span>
+    </div>
   </div>
 </template>
 
 <script setup>
 // Импортируем функции Vue
-import {ref, computed} from 'vue'
+import {ref, computed, onMounted} from 'vue'
 // Импортируем axios для отправки HTTP-запросов
 import axios from 'axios'
 // Импортируем утилиту генерации скобочных строк
@@ -49,6 +54,27 @@ import {generateRandomBracketString} from './utils/bracketGenerator'
 const manualString = ref('')
 // Переменная для хранения текста результата
 const result = ref('')
+// Переменная для хранения статуса Redis Cluster
+const redisStatus = ref('Off')
+
+// Функция для получения статуса Redis Cluster
+const fetchRedisStatus = async () => {
+  try {
+    const response = await axios.get('/api/status')
+    redisStatus.value = response.data.redis_cluster
+  } catch (error) {
+    redisStatus.value = 'Off'
+    console.error('Error fetching Redis status:', error)
+  }
+}
+
+// Вызываем функцию при монтировании компонента
+onMounted(() => {
+  fetchRedisStatus()
+
+  // Обновляем статус каждые 30 секунд
+  setInterval(fetchRedisStatus, 30000)
+})
 
 // Функция генерации случайной скобочной строки
 const generate = () => {
@@ -98,6 +124,11 @@ const answerClass = computed(() => {
   } else {
     return 'neutral' // чёрный цвет
   }
+})
+
+// Вычисляем CSS-класс для статуса Redis Cluster
+const redisStatusClass = computed(() => {
+  return redisStatus.value === 'On' ? 'correct' : 'incorrect'
 })
 </script>
 
@@ -229,5 +260,22 @@ button:hover:enabled {
 /* Цвет текста для нейтрального состояния (по умолчанию) */
 .answer-text.neutral {
   color: black;
+}
+
+/* Стили для индикатора статуса Redis Cluster */
+.redis-status {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Стили для статуса Redis Cluster */
+.redis-status span.correct {
+  color: green;
+}
+
+.redis-status span.incorrect {
+  color: red;
 }
 </style>

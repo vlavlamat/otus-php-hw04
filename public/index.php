@@ -6,6 +6,7 @@ require __DIR__ . '/../vendor/autoload.php';
 // Подключаем классы из пространства имен App
 use App\Validator;
 use App\Router;
+use App\StatsCollector;
 
 // Устанавливаем заголовки для JSON API
 header('Content-Type: application/json');
@@ -94,13 +95,27 @@ $router->addRoute('POST', '/api/validate', function () {
 
 // Маршрут для проверки статуса системы
 $router->addRoute('GET', '/api/status', function () {
-    echo json_encode([
-        'status' => 'OK',
-        'service' => 'bracket-validator',
-        'version' => '1.0.0',
-        'timestamp' => date('c'),
-        'server' => gethostname()
-    ]);
+    try {
+        $statsCollector = new StatsCollector();
+        $redisConnected = $statsCollector->isConnected();
+
+        echo json_encode([
+            'status' => 'OK',
+            'service' => 'bracket-validator',
+            'version' => '1.0.0',
+            'timestamp' => date('c'),
+            'server' => gethostname(),
+            'redis_cluster' => $redisConnected ? 'On' : 'Off'
+        ]);
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Internal server error',
+            'error_code' => 'INTERNAL_ERROR',
+            'redis_cluster' => 'Off'
+        ]);
+    }
 });
 
 // Диспетчеризация запроса
