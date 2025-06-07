@@ -1,42 +1,42 @@
 <?php
 
-// Simple script to test Redis Cluster connection
+// Простой скрипт для тестирования подключения к Redis Cluster
 
-// Include autoloader
+// Подключение автозагрузчика
 require __DIR__ . '/../vendor/autoload.php';
 
-// Test direct connection to Redis Cluster
-echo "Testing direct connection to Redis Cluster...\n";
+// Тестирование прямого подключения к Redis Cluster
+echo "Тестирование прямого подключения к Redis Cluster...\n";
 try {
     $cluster = new \RedisCluster(null, [
         'redis-node1:6379',
         'redis-node2:6379'
     ]);
 
-    // Try to ping the cluster
+    // Попытка отправить ping-запрос к кластеру
     $pingResult = $cluster->ping('redis-node1:6379');
-    echo "Ping result: " . $pingResult . "\n";
+    echo "Результат ping: " . $pingResult . "\n";
 
-    // Try to set and get a value
+    // Попытка установить и получить значение
     $cluster->set('test_key', 'test_value');
     $value = $cluster->get('test_key');
-    echo "Get result: " . $value . "\n";
+    echo "Результат получения: " . $value . "\n";
 
-    echo "Redis Cluster connection successful!\n";
+    echo "Подключение к Redis Cluster успешно!\n";
 } catch (\Exception $e) {
-    echo "Error connecting to Redis Cluster: " . $e->getMessage() . "\n";
-    echo "Error code: " . $e->getCode() . "\n";
-    echo "Error trace: " . $e->getTraceAsString() . "\n";
+    echo "Ошибка подключения к Redis Cluster: " . $e->getMessage() . "\n";
+    echo "Код ошибки: " . $e->getCode() . "\n";
+    echo "Трассировка ошибки: " . $e->getTraceAsString() . "\n";
 }
 
-// Test connection using StatsCollector
-echo "\nTesting connection using StatsCollector...\n";
+// Тестирование подключения с использованием StatsCollector
+echo "\nТестирование подключения с использованием StatsCollector...\n";
 try {
     $statsCollector = new \App\StatsCollector();
     $isConnected = $statsCollector->isConnected();
-    echo "StatsCollector::isConnected() result: " . ($isConnected ? 'true' : 'false') . "\n";
+    echo "Результат StatsCollector::isConnected(): " . ($isConnected ? 'true' : 'false') . "\n";
 } catch (\Exception $e) {
-    echo "Error using StatsCollector: " . $e->getMessage() . "\n";
-    echo "Error code: " . $e->getCode() . "\n";
-    echo "Error trace: " . $e->getTraceAsString() . "\n";
+    echo "Ошибка при использовании StatsCollector: " . $e->getMessage() . "\n";
+    echo "Код ошибки: " . $e->getCode() . "\n";
+    echo "Трассировка ошибки: " . $e->getTraceAsString() . "\n";
 }

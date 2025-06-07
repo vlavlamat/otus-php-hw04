@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 class ValidatorTest extends TestCase
 {
     /**
-     * Test that valid bracket strings are correctly validated.
+     * Тест проверяет, что валидные скобочные строки корректно проходят валидацию.
      *
      * @dataProvider validBracketStringsProvider
      */
@@ -18,7 +18,7 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * Test that invalid bracket strings are correctly rejected.
+     * Тест проверяет, что невалидные скобочные строки корректно отклоняются.
      *
      * @dataProvider invalidBracketStringsProvider
      */
@@ -28,40 +28,40 @@ class ValidatorTest extends TestCase
     }
 
     /**
-     * Test that empty input throws an exception.
+     * Тест проверяет, что пустой ввод вызывает исключение.
      */
     public function testEmptyInputThrowsException(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Empty input.');
-        
+
         Validator::validate('');
     }
 
     /**
-     * Data provider for valid bracket strings.
+     * Поставщик данных для валидных скобочных строк.
      */
     public function validBracketStringsProvider(): array
     {
         return [
-            'simple pair' => ['()'],
-            'nested pairs' => ['(())'],
-            'multiple pairs' => ['()()'],
-            'complex valid string' => ['(())()(())'],
+            'простая пара' => ['()'],
+            'вложенные пары' => ['(())'],
+            'множественные пары' => ['()()'],
+            'сложная валидная строка' => ['(())()(())'],
         ];
     }
 
     /**
-     * Data provider for invalid bracket strings.
+     * Поставщик данных для невалидных скобочных строк.
      */
     public function invalidBracketStringsProvider(): array
     {
         return [
-            'unbalanced opening' => ['('],
-            'unbalanced closing' => [')'],
-            'wrong order' => [')('],
-            'invalid characters' => ['(a)'],
-            'unbalanced nested' => ['((())'],
+            'несбалансированная открывающая' => ['('],
+            'несбалансированная закрывающая' => [')'],
+            'неправильный порядок' => [')('],
+            'недопустимые символы' => ['(a)'],
+            'несбалансированная вложенная' => ['((())'],
         ];
     }
 }

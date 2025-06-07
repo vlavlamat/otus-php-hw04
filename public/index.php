@@ -59,7 +59,15 @@ $router->addRoute('POST', '/api/validate', function () {
 
         $string = $data['string'];
 
-        if (Validator::validate($string)) {
+        // Создаем экземпляр StatsCollector для сбора статистики
+        $statsCollector = new StatsCollector();
+
+        $isValid = Validator::validate($string);
+
+        // Сохраняем статистику о валидации
+        $statsCollector->incrementValidationCounter($string, $isValid);
+
+        if ($isValid) {
             echo json_encode([
                 'status' => 'success',
                 'message' => 'Valid bracket sequence',
@@ -105,7 +113,7 @@ $router->addRoute('GET', '/api/status', function () {
             'version' => '1.0.0',
             'timestamp' => date('c'),
             'server' => gethostname(),
-            'redis_cluster' => $redisConnected ? 'On' : 'Off'
+            'redis_cluster' => $redisConnected ? 'connected' : 'disconnected'
         ]);
     } catch (\Throwable $e) {
         http_response_code(500);
@@ -113,7 +121,7 @@ $router->addRoute('GET', '/api/status', function () {
             'status' => 'error',
             'message' => 'Internal server error',
             'error_code' => 'INTERNAL_ERROR',
-            'redis_cluster' => 'Off'
+            'redis_cluster' => 'disconnected'
         ]);
     }
 });

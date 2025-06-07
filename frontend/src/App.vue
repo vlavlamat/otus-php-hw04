@@ -34,9 +34,12 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Индикатор статуса Redis Cluster -->
+  <!-- Индикатор статуса Redis Cluster в отдельном контейнере -->
+  <div class="redis-status-container">
     <div class="redis-status">
+      <!-- Отображаем статус Redis Cluster (connected/disconnected) -->
       Redis Cluster: <span :class="redisStatusClass">{{ redisStatus }}</span>
     </div>
   </div>
@@ -55,7 +58,9 @@ const manualString = ref('')
 // Переменная для хранения текста результата
 const result = ref('')
 // Переменная для хранения статуса Redis Cluster
-const redisStatus = ref('Off')
+const redisStatus = ref('Loading...')
+// Флаг для отслеживания загрузки статуса Redis
+const isRedisStatusLoading = ref(true)
 
 // Функция для получения статуса Redis Cluster
 const fetchRedisStatus = async () => {
@@ -63,14 +68,19 @@ const fetchRedisStatus = async () => {
     const response = await axios.get('/api/status')
     redisStatus.value = response.data.redis_cluster
   } catch (error) {
-    redisStatus.value = 'Off'
-    console.error('Error fetching Redis status:', error)
+    redisStatus.value = 'disconnected'
+    console.error('Ошибка при получении статуса Redis:', error)
+  } finally {
+    // Устанавливаем флаг загрузки в false после получения статуса
+    isRedisStatusLoading.value = false
   }
 }
 
 // Вызываем функцию при монтировании компонента
 onMounted(() => {
-  fetchRedisStatus()
+  // Добавляем задержку перед первой проверкой статуса Redis Cluster
+  // чтобы дать время на установление соединения
+  setTimeout(fetchRedisStatus, 2000)
 
   // Обновляем статус каждые 30 секунд
   setInterval(fetchRedisStatus, 30000)
@@ -128,7 +138,12 @@ const answerClass = computed(() => {
 
 // Вычисляем CSS-класс для статуса Redis Cluster
 const redisStatusClass = computed(() => {
-  return redisStatus.value === 'On' ? 'correct' : 'incorrect'
+  if (redisStatus.value === 'Loading...') {
+    return 'loading' // желтый цвет для состояния загрузки
+  }
+  // Если статус 'connected', применяем класс 'correct' (зеленый цвет),
+  // иначе применяем класс 'incorrect' (красный цвет)
+  return redisStatus.value === 'connected' ? 'correct' : 'incorrect'
 })
 </script>
 
@@ -262,9 +277,17 @@ button:hover:enabled {
   color: black;
 }
 
+/* Контейнер для индикатора статуса Redis Cluster */
+.redis-status-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
 /* Стили для индикатора статуса Redis Cluster */
 .redis-status {
-  margin-top: 2rem;
   text-align: center;
   font-size: 14px;
   font-weight: bold;
@@ -275,7 +298,18 @@ button:hover:enabled {
   color: green;
 }
 
+.redis-status span.loading {
+  color: #f0ad4e; /* желтый/оранжевый цвет для состояния загрузки */
+  animation: pulse 1.5s infinite; /* добавляем пульсирующую анимацию */
+}
+
 .redis-status span.incorrect {
   color: red;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 </style>
