@@ -10,6 +10,9 @@
 .idea/
 .vscode/
 
+# ▶️ Файлы Junie
+.junie/
+
 # ▶️ PHPUnit
 .phpunit.result.cache
 coverage/
