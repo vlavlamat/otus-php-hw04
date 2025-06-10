@@ -1,3 +1,5 @@
+# docker/frontend/vue.dev.Dockerfile
+
 FROM node:22-alpine
 
 WORKDIR /app
