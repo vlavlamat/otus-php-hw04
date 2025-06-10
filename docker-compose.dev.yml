@@ -32,6 +32,8 @@ services:
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests
+      - ./phpunit.xml:/app/phpunit.xml
+      - ./coverage:/app/coverage
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/local.ini
     environment:
       - COMPOSER_HOME=/var/www/.composer

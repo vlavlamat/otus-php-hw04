@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $router = new Router();
 
 // Маршрут для валидации скобок
-$router->addRoute('POST', '/api/validate', function () {
+$router->addRoute('POST', '/validate', function () {
     try {
         // Получаем JSON из тела запроса
         $input = file_get_contents('php://input');
@@ -102,7 +102,7 @@ $router->addRoute('POST', '/api/validate', function () {
 });
 
 // Маршрут для проверки статуса системы
-$router->addRoute('GET', '/api/status', function () {
+$router->addRoute('GET', '/status', function () {
     try {
         $statsCollector = new StatsCollector();
         $redisConnected = $statsCollector->isConnected();
@@ -115,13 +115,46 @@ $router->addRoute('GET', '/api/status', function () {
             'server' => gethostname(),
             'redis_cluster' => $redisConnected ? 'connected' : 'disconnected'
         ]);
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         http_response_code(500);
         echo json_encode([
             'status' => 'error',
             'message' => 'Internal server error',
             'error_code' => 'INTERNAL_ERROR',
             'redis_cluster' => 'disconnected'
+        ]);
+    }
+});
+
+$router->addRoute('GET', '/', function () {
+    try {
+        $statsCollector = new StatsCollector();
+
+        if ($statsCollector->isConnected()) {
+            echo json_encode([
+                'status' => 'healthy',
+                'service' => 'bracket-validator-api',
+                'timestamp' => date('c'),
+                'server' => gethostname()
+            ]);
+        } else {
+            http_response_code(503);
+            echo json_encode([
+                'status' => 'unhealthy',
+                'reason' => 'redis_unavailable',
+                'service' => 'bracket-validator-api',
+                'timestamp' => date('c'),
+                'server' => gethostname()
+            ]);
+        }
+    } catch (Throwable $e) {
+        http_response_code(503);
+        echo json_encode([
+            'status' => 'unhealthy',
+            'reason' => 'internal_error',
+            'service' => 'bracket-validator-api',
+            'timestamp' => date('c'),
+            'server' => gethostname()
         ]);
     }
 });

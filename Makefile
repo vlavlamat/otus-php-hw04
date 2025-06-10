@@ -2,7 +2,8 @@
 # а просто именованными действиями, которые всегда должны выполняться.
 .PHONY: up down build dev-up dev-down dev-build \
         prod-up prod-down prod-build-multiarch \
-        logs dev-logs prod-logs ps
+        logs dev-logs prod-logs ps \
+        test test-coverage test-setup
 
 # ────────────────────────────────
 # Переменные
@@ -78,10 +79,15 @@ ps:
 # Тестирование
 # ────────────────────────────────
 
+# Установка зависимостей для тестирования
+test-setup:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml build --build-arg INSTALL_DEV=true php-fpm1
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d php-fpm1
+
 # Запуск тестов в контейнере
-test:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec php-fpm1 vendor/bin/phpunit
+test: test-setup
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec php-fpm1 vendor/bin/phpunit -c phpunit.xml
 
 # Запуск тестов с покрытием кода
-test-coverage:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec php-fpm1 vendor/bin/phpunit --coverage-html ./coverage
+test-coverage: test-setup
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec php-fpm1 vendor/bin/phpunit -c phpunit.xml --coverage-html ./coverage
