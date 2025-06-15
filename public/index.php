@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 // Подключаем автозагрузчик Composer
 require __DIR__ . '/../vendor/autoload.php';
@@ -6,7 +7,7 @@ require __DIR__ . '/../vendor/autoload.php';
 // Подключаем классы из пространства имен App
 use App\Validator;
 use App\Router;
-use App\StatsCollector;
+use App\RedisHealthChecker;
 
 // Устанавливаем заголовки для JSON API
 header('Content-Type: application/json');
@@ -16,10 +17,6 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 // Добавим работу с сессиями
 session_start(); // ← автоматически использует RedisCluster!
-
-// Счётчик запросов в сессии
-$_SESSION['request_count'] = ($_SESSION['request_count'] ?? 0) + 1;
-$_SESSION['last_request'] = date('Y-m-d H:i:s');
 
 // Обрабатываем preflight запросы
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -59,13 +56,7 @@ $router->addRoute('POST', '/validate', function () {
 
         $string = $data['string'];
 
-        // Создаем экземпляр StatsCollector для сбора статистики
-        $statsCollector = new StatsCollector();
-
         $isValid = Validator::validate($string);
-
-        // Сохраняем статистику о валидации
-        $statsCollector->incrementValidationCounter($string, $isValid);
 
         if ($isValid) {
             echo json_encode([
@@ -104,8 +95,8 @@ $router->addRoute('POST', '/validate', function () {
 // Маршрут для проверки статуса системы
 $router->addRoute('GET', '/status', function () {
     try {
-        $statsCollector = new StatsCollector();
-        $redisConnected = $statsCollector->isConnected();
+        $redisChecker = new RedisHealthChecker();
+        $redisConnected = $redisChecker->isConnected();
 
         echo json_encode([
             'status' => 'OK',
@@ -122,39 +113,6 @@ $router->addRoute('GET', '/status', function () {
             'message' => 'Internal server error',
             'error_code' => 'INTERNAL_ERROR',
             'redis_cluster' => 'disconnected'
-        ]);
-    }
-});
-
-$router->addRoute('GET', '/', function () {
-    try {
-        $statsCollector = new StatsCollector();
-
-        if ($statsCollector->isConnected()) {
-            echo json_encode([
-                'status' => 'healthy',
-                'service' => 'bracket-validator-api',
-                'timestamp' => date('c'),
-                'server' => gethostname()
-            ]);
-        } else {
-            http_response_code(503);
-            echo json_encode([
-                'status' => 'unhealthy',
-                'reason' => 'redis_unavailable',
-                'service' => 'bracket-validator-api',
-                'timestamp' => date('c'),
-                'server' => gethostname()
-            ]);
-        }
-    } catch (Throwable $e) {
-        http_response_code(503);
-        echo json_encode([
-            'status' => 'unhealthy',
-            'reason' => 'internal_error',
-            'service' => 'bracket-validator-api',
-            'timestamp' => date('c'),
-            'server' => gethostname()
         ]);
     }
 });

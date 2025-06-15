@@ -65,8 +65,8 @@ const isRedisStatusLoading = ref(true)
 // Функция для получения статуса Redis Cluster
 const fetchRedisStatus = async () => {
   try {
-    const response = await axios.get('/api/status')
-    redisStatus.value = response.data.redis_cluster
+    const response = await axios.get('/api/status') // Запрос к backend
+    redisStatus.value = response.data.redis_cluster  // Получаем поле redis_cluster
   } catch (error) {
     redisStatus.value = 'disconnected'
     console.error('Ошибка при получении статуса Redis:', error)
