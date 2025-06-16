@@ -1,4 +1,14 @@
-// Функция генерации валидной (корректной) скобочной строки
+/**
+ * @file bracketGenerator.js
+ * @description Утилиты для генерации строк со скобками (правильных и неправильных)
+ */
+
+
+/**
+ * Генерирует валидную (корректную) скобочную строку
+ * @param {number} maxLength - Максимальная длина генерируемой строки
+ * @returns {string} Валидная строка со скобками
+ */
 export function generateValidBracketString(maxLength = 20) {
     const pairs = Math.floor(Math.random() * (maxLength / 2)) + 1 // выбираем случайное количество пар скобок (минимум 1 пара)
     let result = '' // результирующая строка
@@ -17,7 +27,11 @@ export function generateValidBracketString(maxLength = 20) {
     return result // возвращаем готовую строку
 }
 
-// Функция генерации невалидной (некорректной) скобочной строки
+/**
+ * Генерирует невалидную (некорректную) скобочную строку
+ * @param {number} maxLength - Максимальная длина генерируемой строки
+ * @returns {string} Невалидная строка со скобками
+ */
 export function generateInvalidBracketString(maxLength = 20) {
     const length = Math.floor(Math.random() * (maxLength - 1)) + 2 // случайная длина строки (минимум 2 символа)
     const chars = ['(', ')'] // доступные символы
@@ -26,15 +40,22 @@ export function generateInvalidBracketString(maxLength = 20) {
         str += chars[Math.floor(Math.random() * 2)] // случайным образом выбираем '(' или ')'
     }
 
-    // на всякий случай добавляем хотя бы одну открывающую, если вдруг нет
-    if (!str.includes('(') || !str.includes(')')) {
+    // на всякий случай добавляем хотя бы одну открывающую и одну закрывающую, если их нет
+    if (!str.includes('(')) {
         str += '('
+    }
+    if (!str.includes(')')) {
+        str += ')'
     }
 
     return str // возвращаем хаотичную строку
 }
 
-// Главная функция: выбирает, генерировать ли валидную или невалидную строку
+/**
+ * Генерирует случайную строку со скобками (валидную или невалидную)
+ * то есть случайно выбирает какую строку надо генерировать
+ * @returns {string} Случайная строка со скобками
+ */
 export function generateRandomBracketString() {
     const shouldBeValid = Math.random() < 0.5 // с 50% вероятностью выбираем тип
     return shouldBeValid

@@ -1,6 +1,9 @@
 <?php
+declare(strict_types=1);
 
 namespace App;
+
+use InvalidArgumentException;
 
 /**
  * Класс Validator
@@ -22,13 +25,13 @@ class Validator
      * 
      * @param string $input - Строка для проверки
      * @return bool - true, если строка является корректной скобочной последовательностью, иначе false
-     * @throws \InvalidArgumentException - Если входная строка пуста
+     * @throws InvalidArgumentException - Если входная строка пуста
      */
     public static function validate(string $input): bool
     {
         // Проверяем, что строка не пустая
         if (empty($input)) {
-            throw new \InvalidArgumentException('Empty input.');
+            throw new InvalidArgumentException('Empty input.');
         }
 
         $balance = 0; // счётчик открытых скобок

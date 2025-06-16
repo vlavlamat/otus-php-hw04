@@ -46,13 +46,27 @@
 </template>
 
 <script setup>
+/**
+ * @file App.vue
+ * @description Компонент приложения для проверки корректности последовательности скобок
+ */
+
 // Импортируем функции Vue
-import {ref, computed, onMounted} from 'vue'
+import {ref, computed, onMounted, onUnmounted} from 'vue'
 // Импортируем axios для отправки HTTP-запросов
 import axios from 'axios'
 // Импортируем утилиту генерации скобочных строк
 import {generateRandomBracketString} from './utils/bracketGenerator'
 
+/**
+ * Константы для настройки интервалов проверки статуса Redis
+ */
+const REDIS_STATUS_CHECK_DELAY = 2000
+const REDIS_STATUS_CHECK_INTERVAL = 30000
+
+/**
+ * Состояние приложения
+ */
 // Переменная для хранения введённой или сгенерированной строки
 const manualString = ref('')
 // Переменная для хранения текста результата
@@ -61,12 +75,18 @@ const result = ref('')
 const redisStatus = ref('Loading...')
 // Флаг для отслеживания загрузки статуса Redis
 const isRedisStatusLoading = ref(true)
+// Переменная для хранения идентификатора интервала
+let statusInterval = null
 
-// Функция для получения статуса Redis Cluster
+/**
+ * Получает статус Redis Cluster с сервера
+ * @async
+ * @returns {Promise<void>} Промис без возвращаемого значения
+ */
 const fetchRedisStatus = async () => {
   try {
-    const response = await axios.get('/api/status')
-    redisStatus.value = response.data.redis_cluster
+    const response = await axios.get('/api/status') // Запрос к backend
+    redisStatus.value = response.data.redis_cluster  // Получаем поле redis_cluster
   } catch (error) {
     redisStatus.value = 'disconnected'
     console.error('Ошибка при получении статуса Redis:', error)
@@ -76,70 +96,95 @@ const fetchRedisStatus = async () => {
   }
 }
 
-// Вызываем функцию при монтировании компонента
+/**
+ * Обработчики жизненного цикла компонента
+ */
 onMounted(() => {
-  // Добавляем задержку перед первой проверкой статуса Redis Cluster
-  // чтобы дать время на установление соединения
-  setTimeout(fetchRedisStatus, 2000)
-
-  // Обновляем статус каждые 30 секунд
-  setInterval(fetchRedisStatus, 30000)
+  setTimeout(fetchRedisStatus, REDIS_STATUS_CHECK_DELAY)
+  statusInterval = setInterval(fetchRedisStatus, REDIS_STATUS_CHECK_INTERVAL)
 })
 
-// Функция генерации случайной скобочной строки
+onUnmounted(() => {
+  if (statusInterval) {
+    clearInterval(statusInterval)
+  }
+})
+
+/**
+ * Генерирует случайную скобочную строку
+ */
 const generate = () => {
-  manualString.value = generateRandomBracketString() // генерируем строку
-  result.value = '' // очищаем прошлый результат
+  manualString.value = generateRandomBracketString()
+  result.value = '' 
 }
 
-// Функция отправки строки на сервер для проверки
+/**
+ * Обрабатывает ошибку API
+ * @param {Error} error - Объект ошибки от axios
+ * @returns {string} Сообщение об ошибке для отображения пользователю
+ */
+const handleApiError = (error) => {
+  if (!error.response) {
+    return 'Ошибка сети или сервер недоступен'
+  }
+
+  const {status, data} = error.response
+  if (status === 400) {
+    const errorMessage = data.message || ''
+    return errorMessage.includes('Empty input')
+        ? 'Пустая строка! Status: 400 Bad Request.'
+        : 'Некорректная строка! Status: 400 Bad Request.'
+  }
+
+  return `Ошибка сервера: ${status}`
+}
+
+/**
+ * Отправляет строку на сервер для проверки
+ * @async
+ */
 const submit = async () => {
   const stringToSend = manualString.value
 
   try {
-    // Отправляем POST-запрос на /api/validate с JSON
-    const response = await axios.post('/api/validate', {
+    await axios.post('/api/validate', {
       string: stringToSend
     }, {
       headers: {
         'Content-Type': 'application/json'
       }
     })
-    result.value = 'Корректная строка! Status: 200 OK.' // если успешно
+    result.value = 'Корректная строка! Status: 200 OK.'
   } catch (error) {
-    if (error.response) {
-      if (error.response.status === 400) {
-        const errorMessage = error.response.data.message || ''
-        // Если ошибка о пустом вводе
-        if (errorMessage.includes('Empty input')) {
-          result.value = 'Пустая строка! Status: 400 Bad Request.'
-        } else {
-          result.value = 'Некорректная строка! Status: 400 Bad Request.'
-        }
-      } else {
-        result.value = 'Ошибка при проверке строки' // прочие ошибки
-      }
-    } else {
-      result.value = 'Ошибка при проверке строки' // сетевая ошибка или сбой
-    }
+    result.value = handleApiError(error)
   }
 }
 
-// Вычисляем CSS-класс для текста ответа
+/**
+ * Вычисляемые свойства
+ */
+
+/**
+ * Определяет CSS-класс для текста ответа в зависимости от результата
+ * @returns {string} CSS-класс (correct, incorrect или neutral)
+ */
 const answerClass = computed(() => {
   if (result.value.startsWith('Корректная строка')) {
-    return 'correct' // зелёный цвет
+    return 'correct'
   } else if (result.value.startsWith('Некорректная строка') || result.value.startsWith('Пустая строка')) {
-    return 'incorrect' // красный цвет
+    return 'incorrect'
   } else {
-    return 'neutral' // чёрный цвет
+    return 'neutral'
   }
 })
 
-// Вычисляем CSS-класс для статуса Redis Cluster
+/**
+ * Определяет CSS-класс для отображения статуса Redis Cluster
+ * @returns {string} CSS-класс (loading, correct или incorrect)
+ */
 const redisStatusClass = computed(() => {
   if (redisStatus.value === 'Loading...') {
-    return 'loading' // желтый цвет для состояния загрузки
+    return 'loading'
   }
   // Если статус 'connected', применяем класс 'correct' (зеленый цвет),
   // иначе применяем класс 'incorrect' (красный цвет)
@@ -308,8 +353,14 @@ button:hover:enabled {
 }
 
 @keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
 }
 </style>
