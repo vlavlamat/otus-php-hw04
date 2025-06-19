@@ -16,7 +16,7 @@ export default defineConfig({
         // Прокси для перенаправления API-запросов на backend
         proxy: {
             '/api': {
-                target: 'http://balancer', // адрес backend (например, docker-сервис с именем balancer)
+                target: 'http://nginx-proxy', // адрес nginx (например, docker-сервис с именем nginx-proxy)
                 changeOrigin: true, // меняет origin заголовок, чтобы соответствовать целевому серверу
             }
         }

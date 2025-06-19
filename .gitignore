@@ -38,3 +38,5 @@ desktop.ini
 # ▶️ Персональные и секретные конфиги
 .env
 .env.*
+!.env.example
+!.env.prod.example

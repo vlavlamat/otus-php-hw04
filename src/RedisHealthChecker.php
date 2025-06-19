@@ -21,27 +21,51 @@ class RedisHealthChecker
      *
      * @var RedisCluster
      */
-    private $cluster;
+    private RedisCluster $cluster;
+
+    /**
+     * Конфигурация Redis Cluster
+     *
+     * @var array
+     */
+    private array $config;
 
     /**
      * Конструктор класса
      *
-     * Инициализирует подключение к Redis Cluster, используя пять узлов.
+     * Инициализирует подключение к Redis Cluster, используя конфигурацию из config/redis.php.
      * При создании экземпляра класса автоматически устанавливается соединение
      * с кластером Redis.
      *
+     * @param array|null $config Опциональная конфигурация Redis (для тестирования)
      * @throws RedisClusterException если невозможно подключиться к Redis Cluster
      */
-    public function __construct()
+    public function __construct(?array $config = null)
     {
-        // Инициализируем массив серверов Redis Cluster
-        $this->cluster = new RedisCluster(null, [
-            'redis-node1:6379', // Первый узел кластера Redis
-            'redis-node2:6379', // Второй узел кластера Redis
-            'redis-node3:6379', // Третий узел кластера Redis
-            'redis-node4:6379', // Четвертый узел кластера Redis
-            'redis-node5:6379'  // Пятый узел кластера Redis
-        ]);
+        // Загружаем конфигурацию Redis (используем переданную или загружаем из файла)
+        $this->config = $config ?? require __DIR__ . '/../config/redis.php';
+
+        try {
+            // Инициализируем подключение к Redis Cluster используя узлы из конфигурации
+            $this->cluster = new RedisCluster(
+                null, 
+                $this->config['cluster']['nodes'],
+                $this->config['cluster']['timeout'] ?? 5,
+                $this->config['cluster']['read_timeout'] ?? 5
+            );
+
+            // Проверяем соединение, выполнив простую команду
+            // Используем первый узел из конфигурации для проверки
+            $this->cluster->ping($this->config['cluster']['nodes'][0]);
+        } catch (Exception $e) {
+            // Если произошла любая ошибка при подключении или проверке соединения,
+            // выбрасываем RedisClusterException
+            throw new RedisClusterException(
+                'Failed to connect to Redis Cluster: ' . $e->getMessage(),
+                $e->getCode(),
+                $e
+            );
+        }
     }
 
     /**
@@ -54,14 +78,8 @@ class RedisHealthChecker
      */
     public function getClusterStatus(): array
     {
-        // Список всех узлов Redis Cluster для проверки
-        $nodes = [
-            'redis-node1:6379',
-            'redis-node2:6379',
-            'redis-node3:6379',
-            'redis-node4:6379',
-            'redis-node5:6379'
-        ];
+        // Получаем список узлов из конфигурации
+        $nodes = $this->config['cluster']['nodes'];
 
         $status = []; // Инициализируем массив для хранения статусов
 
@@ -88,7 +106,8 @@ class RedisHealthChecker
      * Проверяет общее состояние Redis Cluster
      *
      * Метод определяет, считается ли кластер работоспособным.
-     * Кластер считается доступным, если не менее 3 узлов из 5 работают корректно.
+     * Кластер считается доступным, если количество работающих узлов
+     * соответствует настройкам кворума из конфигурации.
      * Это обеспечивает отказоустойчивость кластера при выходе из строя
      * меньшинства узлов.
      *
@@ -107,8 +126,20 @@ class RedisHealthChecker
             }
         }
 
-        // Кластер доступен, если минимум 3 узла работают
-        // (обеспечивает кворум для Redis Cluster)
-        return $connectedCount >= 3;
+        // Получаем требуемый кворум из конфигурации
+        $requiredQuorum = $this->config['cluster']['quorum'];
+
+        // Кластер доступен, если количество подключенных узлов >= кворума
+        return $connectedCount >= $requiredQuorum;
+    }
+
+    /**
+     * Возвращает требуемый кворум для кластера
+     *
+     * @return int Минимальное количество узлов для работоспособности кластера
+     */
+    public function getRequiredQuorum(): int
+    {
+        return $this->config['cluster']['quorum'];
     }
 }
