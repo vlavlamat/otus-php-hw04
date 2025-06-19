@@ -29,8 +29,8 @@ prod-logs:
 prod-update:
 	docker pull $(REGISTRY_USER)/php-fpm-hw04:prod
 	docker pull $(REGISTRY_USER)/nginx-backend-hw04:prod
-	docker pull $(REGISTRY_USER)/balancer-hw04:prod
-	docker pull $(REGISTRY_USER)/vue-hw04:prod
+	docker pull $(REGISTRY_USER)/nginx-proxy-hw04:prod
+	docker pull $(REGISTRY_USER)/vue-frontend-hw04:prod
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # ────────────────────────────────
