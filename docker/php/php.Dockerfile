@@ -25,10 +25,10 @@ RUN rm -f \
     /usr/local/etc/php-fpm.d/zz-docker.conf
 
 # Копируем настройки PHP
-COPY ./docker/php/php.ini /usr/local/etc/php/conf.d/local.ini
-COPY ./docker/php/php-fpm.conf /usr/local/etc/php-fpm.conf
-COPY ./docker/php/conf.d/ /usr/local/etc/php/conf.d/
-COPY ./docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
+COPY ./php/php.ini /usr/local/etc/php/conf.d/local.ini
+COPY ./php/php-fpm.conf /usr/local/etc/php-fpm.conf
+COPY ./php/conf.d/ /usr/local/etc/php/conf.d/
+COPY ./php/www.conf /usr/local/etc/php-fpm.d/www.conf
 
 # php.ini - основной файл настройки PHP
 # php-fpm.conf - основной конфигурационный файл для PHP-FPM
@@ -64,5 +64,6 @@ RUN if [ "$INSTALL_DEV" = "true" ]; then \
 # Копируем оставшиеся файлы проекта
 COPY ./src /app/src
 COPY ./public /app/public
+COPY ./config /app/config
 
 CMD ["php-fpm"]

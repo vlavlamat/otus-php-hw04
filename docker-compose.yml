@@ -1,8 +1,8 @@
 services:
-  balancer:
+  nginx-proxy:
     build:
       context: .
-      dockerfile: docker/balancer/balancer.Dockerfile
+      dockerfile: docker/proxy/proxy.Dockerfile
     depends_on:
       - nginx-backend1
       - nginx-backend2
@@ -11,12 +11,12 @@ services:
       - "8001:80"
     networks:
       - otus-hw04
-    container_name: balancer-hw04
+    container_name: nginx-proxy-hw04
 
   nginx-backend1:
     build:
       context: .
-      dockerfile: docker/nginx/nginx.Dockerfile
+      dockerfile: docker/backend/backend.Dockerfile
     networks:
       - otus-hw04
     volumes:
@@ -26,7 +26,7 @@ services:
   nginx-backend2:
     build:
       context: .
-      dockerfile: docker/nginx/nginx.Dockerfile
+      dockerfile: docker/backend/backend.Dockerfile
     networks:
       - otus-hw04
     volumes:

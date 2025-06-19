@@ -3,7 +3,7 @@
 .PHONY: up down build dev-up dev-down dev-build \
         prod-up prod-down prod-build-multiarch \
         logs dev-logs prod-logs ps \
-        test test-coverage test-setup
+        test test-unit test-integration test-coverage test-setup
 
 # ────────────────────────────────
 # Переменные
@@ -48,13 +48,13 @@ dev-logs:
 # ────────────────────────────────
 
 prod-up:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+	docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 prod-down:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+	docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml down
 
 prod-logs:
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f --tail=100
+	docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml logs -f --tail=100
 
 # ────────────────────────────────
 # Multi-architecture билд и пуш (единственный продакшн путь)
@@ -62,10 +62,10 @@ prod-logs:
 
 prod-build:
 	docker buildx create --use || true
-	docker buildx build --platform linux/amd64,linux/arm64 --push --build-arg INSTALL_DEV=false -f docker/php/php.Dockerfile -t $(REGISTRY_USER)/php-fpm-hw04:prod .
-	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/nginx/nginx.Dockerfile -t $(REGISTRY_USER)/nginx-backend-hw04:prod .
-	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/balancer/balancer.Dockerfile -t $(REGISTRY_USER)/balancer-hw04:prod .
-	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/frontend/vue.prod.Dockerfile -t $(REGISTRY_USER)/vue-hw04:prod .
+	docker buildx build --env-file .env.prod --platform linux/amd64,linux/arm64 --push --build-arg INSTALL_DEV=false -f docker/php/php.Dockerfile -t $(REGISTRY_USER)/php-fpm-hw04:prod .
+	docker buildx build --env-file .env.prod --platform linux/amd64,linux/arm64 --push -f docker/backend/backend.Dockerfile -t $(REGISTRY_USER)/nginx-backend-hw04:prod .
+	docker buildx build --env-file .env.prod --platform linux/amd64,linux/arm64 --push -f docker/proxy/proxy.Dockerfile -t $(REGISTRY_USER)/nginx-proxy-hw04:prod .
+	docker buildx build --env-file .env.prod --platform linux/amd64,linux/arm64 --push -f docker/frontend/vue.prod.Dockerfile -t $(REGISTRY_USER)/vue-frontend-hw04:prod .
 
 # ────────────────────────────────
 # Утилиты
@@ -84,9 +84,17 @@ test-setup:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml build --build-arg INSTALL_DEV=true php-fpm1
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d php-fpm1
 
-# Запуск тестов в контейнере
+# Запуск всех тестов в контейнере
 test: test-setup
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec php-fpm1 vendor/bin/phpunit -c phpunit.xml
+
+# Запуск только unit тестов
+test-unit: test-setup
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec php-fpm1 vendor/bin/phpunit -c phpunit.xml --testsuite Unit
+
+# Запуск только интеграционных тестов
+test-integration: test-setup
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml exec php-fpm1 vendor/bin/phpunit -c phpunit.xml --testsuite Integration
 
 # Запуск тестов с покрытием кода
 test-coverage: test-setup

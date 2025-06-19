@@ -39,8 +39,8 @@
   <!-- Индикатор статуса Redis Cluster в отдельном контейнере -->
   <div class="redis-status-container">
     <div class="redis-status">
-      <!-- Отображаем статус Redis Cluster (connected/disconnected) -->
-      Redis Cluster: <span :class="redisStatusClass">{{ redisStatus }}</span>
+      <!-- Отображаем статус Redis Cluster с детальной обработкой ошибок -->
+      Redis Cluster: <span :class="redisStatusClass">{{ redisStatusText }}</span>
     </div>
   </div>
 </template>
@@ -88,8 +88,26 @@ const fetchRedisStatus = async () => {
     const response = await axios.get('/api/status') // Запрос к backend
     redisStatus.value = response.data.redis_cluster  // Получаем поле redis_cluster
   } catch (error) {
-    redisStatus.value = 'disconnected'
-    console.error('Ошибка при получении статуса Redis:', error)
+    // 🔍 Детальная обработка разных типов ошибок
+    if (error.code === 'NETWORK_ERROR' || !error.response) {
+      redisStatus.value = 'network_error'
+    } else if (error.response?.status >= 500) {
+      redisStatus.value = 'server_error'
+    } else if (error.response?.status === 404) {
+      redisStatus.value = 'api_not_found'
+    } else if (error.response?.status >= 400) {
+      redisStatus.value = 'client_error'
+    } else {
+      redisStatus.value = 'unknown_error'
+    }
+
+    // 📝 Логируем для разработчика
+    console.error('Redis status error:', {
+      message: error.message,
+      status: error.response?.status,
+      code: error.code,
+      url: error.config?.url
+    })
   } finally {
     // Устанавливаем флаг загрузки в false после получения статуса
     isRedisStatusLoading.value = false
@@ -115,7 +133,7 @@ onUnmounted(() => {
  */
 const generate = () => {
   manualString.value = generateRandomBracketString()
-  result.value = '' 
+  result.value = ''
 }
 
 /**
@@ -180,15 +198,40 @@ const answerClass = computed(() => {
 
 /**
  * Определяет CSS-класс для отображения статуса Redis Cluster
- * @returns {string} CSS-класс (loading, correct или incorrect)
+ * @returns {string} CSS-класс для разных типов ошибок
  */
 const redisStatusClass = computed(() => {
-  if (redisStatus.value === 'Loading...') {
-    return 'loading'
+  const statusMap = {
+    'Loading...': 'loading',
+    'connected': 'correct',
+    'disconnected': 'incorrect',
+    'network_error': 'network-error',
+    'server_error': 'server-error',
+    'api_not_found': 'api-error',
+    'client_error': 'client-error',
+    'unknown_error': 'unknown-error'
   }
-  // Если статус 'connected', применяем класс 'correct' (зеленый цвет),
-  // иначе применяем класс 'incorrect' (красный цвет)
-  return redisStatus.value === 'connected' ? 'correct' : 'incorrect'
+
+  return statusMap[redisStatus.value] || 'incorrect'
+})
+
+/**
+ * Определяет отображаемый текст для статуса Redis Cluster
+ * @returns {string} Пользовательский текст статуса
+ */
+const redisStatusText = computed(() => {
+  const textMap = {
+    'Loading...': 'Loading...',
+    'connected': 'Connected',
+    'disconnected': 'Disconnected',
+    'network_error': 'Network Error',
+    'server_error': 'Server Error',
+    'api_not_found': 'API Not Found',
+    'client_error': 'Request Error',
+    'unknown_error': 'Unknown Error'
+  }
+
+  return textMap[redisStatus.value] || 'Error'
 })
 </script>
 
@@ -350,6 +393,27 @@ button:hover:enabled {
 
 .redis-status span.incorrect {
   color: red;
+}
+
+/* 🎨 Стили для разных типов ошибок */
+.redis-status span.network-error {
+  color: #ff6b35; /* Оранжевый для сетевых ошибок */
+}
+
+.redis-status span.server-error {
+  color: #dc3545; /* Красный для серверных ошибок */
+}
+
+.redis-status span.api-error {
+  color: #6f42c1; /* Фиолетовый для API ошибок */
+}
+
+.redis-status span.client-error {
+  color: #fd7e14; /* Оранжевый для клиентских ошибок */
+}
+
+.redis-status span.unknown-error {
+  color: #6c757d; /* Серый для неизвестных ошибок */
 }
 
 @keyframes pulse {

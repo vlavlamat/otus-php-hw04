@@ -74,7 +74,7 @@ class Router
         $uri = parse_url($uri, PHP_URL_PATH);
 
         // Проверяем корректность URI
-        if ($uri === false) {
+        if ($uri === false || $uri === null) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid URI']);
             return;

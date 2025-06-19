@@ -15,14 +15,14 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Добавим работу с сессиями
-session_start(); // ← автоматически использует RedisCluster!
-
 // Обрабатываем preflight запросы
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
+
+// Добавим работу с сессиями
+session_start(); // ← автоматически использует RedisCluster!
 
 $router = new Router();
 
@@ -43,7 +43,7 @@ $router->addRoute('POST', '/validate', function () {
             return;
         }
 
-        if (!isset($data['string'])) {
+        if (!array_key_exists('string', $data)) {
             http_response_code(400);
             echo json_encode([
                 'status' => 'error',
@@ -55,6 +55,27 @@ $router->addRoute('POST', '/validate', function () {
         }
 
         $string = $data['string'];
+
+        // Добавить валидацию
+        if (!is_string($string)) {
+            http_response_code(400);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'String parameter must be a string',
+                'error_code' => 'INVALID_TYPE'
+            ]);
+            return;
+        }
+
+        if (strlen($string) > 10000) { // Ограничение длины
+            http_response_code(400);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'String too long (max 10000 characters)',
+                'error_code' => 'STRING_TOO_LONG'
+            ]);
+            return;
+        }
 
         $isValid = Validator::validate($string);
 
@@ -97,6 +118,19 @@ $router->addRoute('GET', '/status', function () {
     try {
         $redisChecker = new RedisHealthChecker();
         $redisConnected = $redisChecker->isConnected();
+        $clusterStatus = $redisChecker->getClusterStatus();
+
+        // Подсчитываем статистику узлов
+        $connectedCount = 0;
+        $totalNodes = count($clusterStatus);
+        foreach ($clusterStatus as $nodeStatus) {
+            if ($nodeStatus === 'connected') {
+                $connectedCount++;
+            }
+        }
+
+        // Получаем требуемый кворум из конфигурации
+        $requiredQuorum = $redisChecker->getRequiredQuorum();
 
         echo json_encode([
             'status' => 'OK',
@@ -104,7 +138,15 @@ $router->addRoute('GET', '/status', function () {
             'version' => '1.0.0',
             'timestamp' => date('c'),
             'server' => gethostname(),
-            'redis_cluster' => $redisConnected ? 'connected' : 'disconnected'
+            'redis_cluster' => $redisConnected ? 'connected' : 'disconnected',
+            'redis_details' => [
+                'cluster_status' => $redisConnected ? 'healthy' : 'unhealthy',
+                'connected_nodes' => $connectedCount,
+                'total_nodes' => $totalNodes,
+                'quorum_required' => $requiredQuorum,
+                'quorum_met' => $connectedCount >= $requiredQuorum,
+                'nodes' => $clusterStatus
+            ]
         ]);
     } catch (Throwable $e) {
         http_response_code(500);
@@ -112,7 +154,11 @@ $router->addRoute('GET', '/status', function () {
             'status' => 'error',
             'message' => 'Internal server error',
             'error_code' => 'INTERNAL_ERROR',
-            'redis_cluster' => 'disconnected'
+            'redis_cluster' => 'disconnected',
+            'redis_details' => [
+                'cluster_status' => 'error',
+                'error' => $e->getMessage()
+            ]
         ]);
     }
 });

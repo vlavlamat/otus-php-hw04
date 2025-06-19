@@ -29,14 +29,38 @@ try {
     echo "Трассировка ошибки: " . $e->getTraceAsString() . "\n";
 }
 
-// Тестирование подключения с использованием StatsCollector
-echo "\nТестирование подключения с использованием StatsCollector...\n";
+// Тестирование подключения с использованием RedisHealthChecker
+echo "\nТестирование подключения с использованием RedisHealthChecker...\n";
 try {
-    $statsCollector = new \App\StatsCollector();
-    $isConnected = $statsCollector->isConnected();
-    echo "Результат StatsCollector::isConnected(): " . ($isConnected ? 'true' : 'false') . "\n";
+    $healthChecker = new \App\RedisHealthChecker();
+
+    // Проверяем общее состояние кластера
+    $isConnected = $healthChecker->isConnected();
+    echo "Результат RedisHealthChecker::isConnected(): " . ($isConnected ? 'true' : 'false') . "\n";
+
+    // Получаем детальный статус всех узлов
+    echo "\nДетальный статус всех узлов:\n";
+    $clusterStatus = $healthChecker->getClusterStatus();
+    foreach ($clusterStatus as $node => $status) {
+        echo "  $node: $status\n";
+    }
+
+    // Подсчитываем количество подключенных узлов
+    $connectedCount = 0;
+    foreach ($clusterStatus as $status) {
+        if ($status === 'connected') {
+            $connectedCount++;
+        }
+    }
+    echo "\nПодключенных узлов: $connectedCount из " . count($clusterStatus) . "\n";
+    // Проверяем достижение кворума (минимум 6 узлов из 10)
+    // Redis Cluster требует большинства узлов (>50%) для обеспечения отказоустойчивости
+    // и согласованности данных. При 10 узлах кворум составляет 6 узлов.
+    // Это гарантирует работоспособность кластера даже при отказе до 4 узлов.
+    echo "Кворум (минимум 6): " . ($connectedCount >= 6 ? 'ДОСТИГНУТ' : 'НЕ ДОСТИГНУТ') . "\n";
+
 } catch (\Exception $e) {
-    echo "Ошибка при использовании StatsCollector: " . $e->getMessage() . "\n";
+    echo "Ошибка при использовании RedisHealthChecker: " . $e->getMessage() . "\n";
     echo "Код ошибки: " . $e->getCode() . "\n";
     echo "Трассировка ошибки: " . $e->getTraceAsString() . "\n";
 }
