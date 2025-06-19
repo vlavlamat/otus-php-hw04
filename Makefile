@@ -62,10 +62,11 @@ prod-logs:
 
 prod-build:
 	docker buildx create --use || true
-	docker buildx build --env-file .env.prod --platform linux/amd64,linux/arm64 --push --build-arg INSTALL_DEV=false -f docker/php/php.Dockerfile -t $(REGISTRY_USER)/php-fpm-hw04:prod .
-	docker buildx build --env-file .env.prod --platform linux/amd64,linux/arm64 --push -f docker/backend/backend.Dockerfile -t $(REGISTRY_USER)/nginx-backend-hw04:prod .
-	docker buildx build --env-file .env.prod --platform linux/amd64,linux/arm64 --push -f docker/proxy/proxy.Dockerfile -t $(REGISTRY_USER)/nginx-proxy-hw04:prod .
-	docker buildx build --env-file .env.prod --platform linux/amd64,linux/arm64 --push -f docker/frontend/vue.prod.Dockerfile -t $(REGISTRY_USER)/vue-frontend-hw04:prod .
+	set -a && source .env.prod && set +a && \
+	docker buildx build --platform linux/amd64,linux/arm64 --push --build-arg INSTALL_DEV=false -f docker/php/php.Dockerfile -t $(REGISTRY_USER)/php-fpm-hw04:prod . && \
+	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/backend/backend.Dockerfile -t $(REGISTRY_USER)/nginx-backend-hw04:prod . && \
+	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/proxy/proxy.Dockerfile -t $(REGISTRY_USER)/nginx-proxy-hw04:prod . && \
+	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/frontend/vue.prod.Dockerfile -t $(REGISTRY_USER)/vue-frontend-hw04:prod .
 
 # ────────────────────────────────
 # Утилиты
