@@ -72,6 +72,10 @@ otus-php-hw04/
 │   ├── manual_test.php
 │   └── redis_test.php
 ├── vendor/
+├── .env                           # Переменные окружения для dev-режима
+├── .env.example                   # Шаблон переменных окружения для dev-режима
+├── .env.prod                      # Переменные окружения для prod-режима
+├── .env.prod.example              # Шаблон переменных окружения для prod-режима
 ├── .gitignore
 ├── composer.json
 ├── docker-compose.yml
