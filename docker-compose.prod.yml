@@ -1,6 +1,6 @@
 services:
-  balancer:
-    image: vlavlamat/balancer-hw04:prod
+  nginx-proxy:
+    image: vlavlamat/nginx-proxy-hw04:prod
     restart: always
 
   nginx-backend1:
@@ -13,14 +13,14 @@ services:
 
   php-fpm1:
     image: vlavlamat/php-fpm-hw04:prod
-    environment:
-      - APP_ENV=production
+    env_file:
+      - .env.prod
     restart: always
 
   php-fpm2:
     image: vlavlamat/php-fpm-hw04:prod
-    environment:
-      - APP_ENV=production
+    env_file:
+      - .env.prod
     restart: always
 
   frontend:
