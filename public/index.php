@@ -103,7 +103,7 @@ $router->addRoute('POST', '/validate', function () {
             'error_code' => 'VALIDATION_ERROR',
             'valid' => false
         ]);
-    } catch (Throwable $e) {
+    } catch (Throwable) {
         http_response_code(500);
         echo json_encode([
             'status' => 'error',
