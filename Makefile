@@ -31,7 +31,7 @@ prod-update:
 	docker pull $(REGISTRY_USER)/nginx-backend-hw04:prod
 	docker pull $(REGISTRY_USER)/nginx-proxy-hw04:prod
 	docker pull $(REGISTRY_USER)/vue-frontend-hw04:prod
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --remove-orphans
 
 # ────────────────────────────────
 # Очистка старых dangling-образов
