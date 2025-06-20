@@ -24,5 +24,5 @@ services:
     restart: always
 
   frontend:
-    image: vlavlamat/vue-hw04:prod
+    image: vlavlamat/vue-frontend-hw04:prod
     restart: always
