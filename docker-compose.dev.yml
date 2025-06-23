@@ -34,7 +34,7 @@ services:
     build:
       context: .
       dockerfile: docker/frontend/vue.dev.Dockerfile
-    image: otus-php-hw04/vue:dev
+    image: otus-php-hw04/vue-frontend:dev
     volumes:
       - ./frontend:/app
       - /app/node_modules
