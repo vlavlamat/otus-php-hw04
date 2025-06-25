@@ -30,12 +30,12 @@ RUN rm /etc/nginx/conf.d/default.conf
 # Добавляем свой конфиг nginx для фронтенда
 COPY ./nginx/frontend/default.conf /etc/nginx/conf.d/default.conf
 
-# КЛЮЧЕВАЯ СТРОКА: копируем собранные файлы из временного контейнера "builder" в frontend
+# КЛЮЧЕВАЯ СТРОКА: копируем собранные файлы из временного контейнера "builder" в frontend-nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 EXPOSE 80
 
-# Запускаем backend в foreground режиме
+# Запускаем nginx в foreground режиме
 CMD ["nginx", "-g", "daemon off;"]
 
 # "nginx" - это исполняемая программа (веб-сервер Nginx)
