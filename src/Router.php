@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App;
@@ -34,11 +35,19 @@ class Router
      * @param string $path Путь URI для маршрута (например, '/api/validate')
      * @param callable $handler Функция-обработчик, которая будет вызвана при совпадении маршрута
      * @return void
+     * @throws InvalidArgumentException Если HTTP-метод не поддерживается
+     * @throws InvalidArgumentException Если путь имеет неверный формат
      * @throws InvalidArgumentException Если маршрут с таким методом и путём уже существует
      */
     public function addRoute(string $method, string $path, callable $handler): void
     {
+        // Преобразуем метод к верхнему регистру для единообразия
         $method = strtoupper($method);
+
+        // Валидация пути
+        if (!$this->isValidPath($path)) {
+            throw new InvalidArgumentException("Invalid path format: $path");
+        }
 
         // Проверяем дублирование
         foreach ($this->routes as $route) {
@@ -46,8 +55,9 @@ class Router
                 throw new InvalidArgumentException("Route $method $path already exists");
             }
         }
+        // Создаем ассоциативный массив с данными маршрута и добавляем его в конец массива $this->routes
         $this->routes[] = [
-            'method' => $method, // Преобразуем метод к верхнему регистру для единообразия
+            'method' => $method,
             'path' => $path,                 // Путь URI
             'handler' => $handler            // Функция-обработчик
         ];
@@ -70,7 +80,10 @@ class Router
      */
     public function dispatch(string $method, string $uri): void
     {
-        // Убираем query string из URI (часть после знака вопроса)
+        // Преобразуем метод к верхнему регистру для единообразия
+        $method = strtoupper($method);
+
+        // Убираем query string из URI
         $uri = parse_url($uri, PHP_URL_PATH);
 
         // Проверяем корректность URI
@@ -80,14 +93,21 @@ class Router
             return;
         }
 
+        // Проверяем корректность пути
+        if (!$this->isValidPath($uri)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid path']);
+            return;
+        }
+
         // Перебираем все зарегистрированные маршруты
         foreach ($this->routes as $route) {
             // Проверяем совпадение метода и пути
-            if ($route['method'] === strtoupper($method) && $this->matchPath($route['path'], $uri)) {
+            if ($route['method'] === $method && $this->matchPath($route['path'], $uri)) {
                 // Вызываем обработчик маршрута
                 try {
-                    call_user_func($route['handler']);
-                } catch (Throwable $e) {
+                    $route['handler']();
+                } catch (Throwable) {
                     http_response_code(500);
                     echo json_encode(['error' => 'Internal server error']);
                 }
@@ -115,5 +135,32 @@ class Router
     {
         // Простое сравнение путей (можно расширить для параметров)
         return $pattern === $uri;
+    }
+
+    private function isValidPath(?string $path): bool
+    {
+        // Проверяем тип - строка или нет
+        if (!is_string($path)) {
+            return false;
+        }
+        // Проверяем длину - RFC рекомендует ограничение
+        if ($path === '' || strlen($path) > 2048) {
+            return false;
+        }
+
+        // Проверяем, чтобы начиналось с '/'
+        if ($path[0] !== '/') {
+            return false;
+        }
+
+        // Запретить directory traversal (../)
+        if (str_contains($path, '..')) {
+            return false;
+        }
+
+        // Единственная проверка формата - позитивная валидация
+        // Разрешаем разрешаем только нужные символы
+        return preg_match('/^\/[a-zA-Z0-9_\-.%\/]+$/', $path) === 1;
+
     }
 }
