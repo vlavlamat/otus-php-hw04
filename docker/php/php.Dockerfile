@@ -1,7 +1,7 @@
 FROM php:8.4-fpm-alpine
 
 # Устанавливаем нужные пакеты
-RUN apk add --no-cache unzip git curl zlib-dev autoconf $PHPIZE_DEPS \
+RUN apk add --no-cache unzip git curl zlib-dev autoconf bash $PHPIZE_DEPS \
  && pecl install redis \
  && docker-php-ext-enable redis \
  && pecl install pcov \

@@ -46,7 +46,7 @@ class Router
 
         // Валидация пути
         if (!$this->isValidPath($path)) {
-            throw new InvalidArgumentException("Invalid path format: $path");
+            throw new InvalidArgumentException("Invalid path $path");
         }
 
         // Проверяем дублирование
@@ -58,8 +58,8 @@ class Router
         // Создаем ассоциативный массив с данными маршрута и добавляем его в конец массива $this->routes
         $this->routes[] = [
             'method' => $method,
-            'path' => $path,                 // Путь URI
-            'handler' => $handler            // Функция-обработчик
+            'path' => $path,
+            'handler' => $handler
         ];
     }
 
@@ -159,8 +159,7 @@ class Router
         }
 
         // Единственная проверка формата - позитивная валидация
-        // Разрешаем разрешаем только нужные символы
+        // Разрешаем только нужные символы
         return preg_match('/^\/[a-zA-Z0-9_\-.%\/]+$/', $path) === 1;
-
     }
 }
