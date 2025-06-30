@@ -48,13 +48,13 @@ dev-logs:
 # ────────────────────────────────
 
 prod-up:
-	docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
+	docker compose --env-file env/.env.prod -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 prod-down:
-	docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml down
+	docker compose --env-file env/.env.prod -f docker-compose.yml -f docker-compose.prod.yml down
 
 prod-logs:
-	docker compose --env-file .env.prod -f docker-compose.yml -f docker-compose.prod.yml logs -f --tail=100
+	docker compose --env-file env/.env.prod -f docker-compose.yml -f docker-compose.prod.yml logs -f --tail=100
 
 # ────────────────────────────────
 # Multi-architecture билд и пуш (единственный продакшн путь)
@@ -62,7 +62,7 @@ prod-logs:
 
 prod-build:
 	docker buildx create --use || true
-	set -a && source .env.prod && set +a && \
+	set -a && source env/.env.prod && set +a && \
 	docker buildx build --platform linux/amd64,linux/arm64 --push --build-arg INSTALL_DEV=false -f docker/php/php.Dockerfile -t $(REGISTRY_USER)/php-fpm-hw04:prod . && \
 	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/backend/backend.Dockerfile -t $(REGISTRY_USER)/nginx-backend-hw04:prod . && \
 	docker buildx build --platform linux/amd64,linux/arm64 --push -f docker/proxy/proxy.Dockerfile -t $(REGISTRY_USER)/nginx-proxy-hw04:prod . && \

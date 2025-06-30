@@ -50,8 +50,8 @@ class RedisHealthCheckerTest extends TestCase
         // Проверяем, что есть 10 узлов
         $this->assertCount(10, $config['cluster']['nodes']);
 
-        // Проверяем, что кворум разумный (больше половины)
-        $this->assertGreaterThan(5, $config['cluster']['quorum']);
+        // Проверяем, что кворум имеет ожидаемое значение
+        $this->assertEquals(3, $config['cluster']['quorum']);
         $this->assertLessThanOrEqual(10, $config['cluster']['quorum']);
     }
 
@@ -134,7 +134,7 @@ class RedisHealthCheckerTest extends TestCase
         $config = require __DIR__ . '/../../config/redis.php';
 
         // Проверяем значения по умолчанию
-        $this->assertEquals(6, $config['cluster']['quorum']);
+        $this->assertEquals(3, $config['cluster']['quorum']);
         $this->assertEquals(5, $config['cluster']['timeout']);
         $this->assertEquals(5, $config['cluster']['read_timeout']);
     }

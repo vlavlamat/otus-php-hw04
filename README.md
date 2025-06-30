@@ -97,7 +97,7 @@ otus-php-hw04/
    - Отредактируйте `.env` файл, установив необходимые значения переменных
 
    ```bash
-   cp .env.example .env
+   cp .env.prod.example .env
    # Отредактируйте .env файл
    ```
 
