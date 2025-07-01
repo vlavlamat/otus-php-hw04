@@ -26,6 +26,8 @@
 ```
 otus-php-hw04/
 ├── coverage/                      # Директория для отчетов о покрытии кода тестами
+├── config/
+│   └── redis.php                  # Конфигурация Redis Cluster
 ├── docker/
 │   ├── backend/
 │   │   └── backend.Dockerfile
@@ -36,6 +38,11 @@ otus-php-hw04/
 │   │   └── php.Dockerfile
 │   └── proxy/
 │       └── proxy.Dockerfile
+├── env/
+│   ├── .env                       # Переменные окружения для dev-режима
+│   ├── .env.dev.example           # Шаблон переменных окружения для dev-режима
+│   ├── .env.prod                  # Переменные окружения для prod-режима
+│   └── .env.prod.example          # Шаблон переменных окружения для prod-режима
 ├── frontend/
 │   ├── src/
 │   │   ├── utils/
@@ -67,15 +74,19 @@ otus-php-hw04/
 │   ├── Router.php
 │   └── Validator.php
 ├── tests/
+│   ├── Integration/
+│   │   ├── ApiValidationTest.php
+│   │   └── ComponentIntegrationTest.php
 │   ├── Unit/
+│   │   ├── RedisHealthCheckerTest.php
+│   │   ├── RouterTest.php
 │   │   └── ValidatorTest.php
+│   ├── config_test.php
 │   ├── manual_test.php
 │   └── redis_test.php
 ├── vendor/
-├── .env                           # Переменные окружения для dev-режима
-├── .env.example                   # Шаблон переменных окружения для dev-режима
-├── .env.prod                      # Переменные окружения для prod-режима
-├── .env.prod.example              # Шаблон переменных окружения для prod-режима
+├── .dockerignore                  # Исключения для Docker контекста
+├── .env.prod.example              # Шаблон переменных окружения для prod-режима (корневой)
 ├── .gitignore
 ├── composer.json
 ├── docker-compose.yml
@@ -93,21 +104,21 @@ otus-php-hw04/
 Перед запуском проекта необходимо настроить переменные окружения:
 
 1. Для **dev-окружения**:
-   - Скопируйте файл `.env.example` в `.env`
-   - Отредактируйте `.env` файл, установив необходимые значения переменных
+   - Скопируйте файл `env/.env.dev.example` в `env/.env`
+   - Отредактируйте `env/.env` файл, установив необходимые значения переменных
 
    ```bash
-   cp .env.prod.example .env
-   # Отредактируйте .env файл
+   cp env/.env.dev.example env/.env
+   # Отредактируйте env/.env файл
    ```
 
 2. Для **prod-окружения**:
-   - Скопируйте файл `.env.prod.example` в `.env.prod`
-   - Отредактируйте `.env.prod` файл, установив необходимые значения переменных
+   - Скопируйте файл `env/.env.prod.example` в `env/.env.prod`
+   - Отредактируйте `env/.env.prod` файл, установив необходимые значения переменных
 
    ```bash
-   cp .env.prod.example .env.prod
-   # Отредактируйте .env.prod файл
+   cp env/.env.prod.example env/.env.prod
+   # Отредактируйте env/.env.prod файл
    ```
 
 ### Dev-режим (сборка и запуск всех сервисов с исходниками)
@@ -120,7 +131,7 @@ make dev-down     # Остановка dev-окружения
 ### Prod-режим (сборка и запуск production-образов)
 
 ```bash
-make prod-up      # Подтянуть и запустить production-образы с использованием .env.prod
+make prod-up      # Подтянуть и запустить production-образы с использованием env/.env.prod
 make prod-down    # Остановка prod-окружения
 ```
 
@@ -131,9 +142,9 @@ make prod-down    # Остановка prod-окружения
 * `make dev-build` — собрать и запустить dev-окружение с dev-зависимостями
 * `make dev-rebuild` — пересобрать dev-окружение без кеша
 * `make dev-logs` — показать dev-логи
-* `make prod-up` — подтянуть образы и запустить prod-окружение с использованием .env.prod
+* `make prod-up` — подтянуть образы и запустить prod-окружение с использованием env/.env.prod
 * `make prod-down` — остановить prod-окружение
-* `make prod-build` — собрать multi-arch prod-образы с использованием .env.prod и запушить в Docker Hub
+* `make prod-build` — собрать multi-arch prod-образы с использованием env/.env.prod и запушить в Docker Hub
 * `make prod-logs` — показать prod-логи
 * `make ps` — показать запущенные контейнеры
 * `make test-setup` — подготовить окружение для тестирования
@@ -215,7 +226,8 @@ session.save_path = "seed[]=redis-node1:6379&seed[]=redis-node2:6379&seed[]=redi
 
 Проект включает автоматизированные тесты для проверки корректности работы валидатора скобок и других компонентов:
 
-* **Unit-тесты**: Проверяют корректность работы класса `Validator` с различными входными данными
+* **Unit-тесты**: Проверяют корректность работы классов `Validator`, `Router`, `RedisHealthChecker` с различными входными данными
+* **Integration-тесты**: Проверяют взаимодействие компонентов системы и API endpoints
 * **Покрытие кода**: Генерация HTML-отчета о покрытии кода тестами
 
 ### Запуск тестов

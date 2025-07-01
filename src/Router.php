@@ -143,14 +143,25 @@ class Router
         if (!is_string($path)) {
             return false;
         }
+
         // Проверяем длину - RFC рекомендует ограничение
-        if ($path === '' || strlen($path) > 2048) {
+        if (strlen($path) > 2048) {
             return false;
+        }
+
+        // Разрешаем пустой путь
+        if ($path === '') {
+            return true;
         }
 
         // Проверяем, чтобы начиналось с '/'
         if ($path[0] !== '/') {
             return false;
+        }
+
+        // Разрешаем корневой путь
+        if ($path === '/') {
+            return true;
         }
 
         // Запретить directory traversal (../)
