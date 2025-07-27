@@ -1,22 +1,26 @@
 FROM php:8.4-fpm-alpine
 
 # Устанавливаем нужные пакеты
-RUN apk add --no-cache unzip git curl zlib-dev autoconf bash $PHPIZE_DEPS \
+RUN apk add --no-cache \
+      unzip git curl zlib-dev autoconf bash \
+      gcc g++ make libc-dev pkgconf re2c \
  && pecl install redis \
  && docker-php-ext-enable redis \
  && pecl install pcov \
  && docker-php-ext-enable pcov \
- && apk del $PHPIZE_DEPS
+ && apk del gcc g++ make libc-dev pkgconf re2c autoconf
 
-# apk --no-cache - установка пакетов без сохранения кеша, что уменьшает размер образа
-# unzip - для распаковки zip-архивов
-# git - для работы с Git-репозиториями
-# curl - для HTTP-запросов
-# zlib-dev - библиотека для сжатия данных, нужна для многих PHP-расширений
-# $PHPIZE_DEPS - переменная окружения, содержащая список пакетов, необходимых для компиляции PHP-расширений
-# pecl install redis - установка PHP-расширения для работы с Redis через PECL
-# docker-php-ext-enable redis - активация установленного расширения Redis
-# apk del PHPIZE_DEPS - удаление компиляторов и инструментов для сборки после установки, чтобы уменьшить размер образа
+# apk --no-cache — установка пакетов без сохранения кеша, уменьшает размер образа
+# unzip — для распаковки zip-архивов (например, composer)
+# git — для работы с git-репозиториями (при composer install/update)
+# curl — для HTTP-запросов
+# zlib-dev — библиотека для работы со сжатием, требуется многим расширениям PHP
+# autoconf, gcc, g++, make, libc-dev, pkgconf, re2c — необходимые инструменты и компиляторы для сборки PHP-расширений через pecl
+# После установки расширений инструментальные пакеты удаляются для минимизации размера образа
+# pecl install redis — установка расширения Redis для PHP
+# docker-php-ext-enable redis — активация установленного расширения Redis
+# pecl install pcov — установка расширения покрытия кода pcov для PHP
+# docker-php-ext-enable pcov — активация установленного расширения pcov
 
 # Удаляем мешающий конфиг
 RUN rm -f \

@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\Validator;
+use App\Validator\BracketValidator;
 
 // Тестовые случаи
 $testCases = [
@@ -24,7 +24,7 @@ $testCases = [
 $passed = 0;
 $failed = 0;
 
-echo "Запуск тестов для класса Validator...\n\n";
+echo "Запуск тестов для класса BracketValidator...\n\n";
 
 foreach ($testCases as $testCase) {
     foreach ($testCase as $input => $expected) {
@@ -32,7 +32,7 @@ foreach ($testCases as $testCase) {
         echo "Ожидаемый результат: " . ($expected ? 'true' : 'false') . "\n";
 
         try {
-            $result = Validator::validate($input);
+            $result = BracketValidator::validate($input);
             echo "Фактический результат: " . ($result ? 'true' : 'false') . "\n";
 
             if ($result === $expected) {
@@ -62,7 +62,7 @@ echo "Тестирование пустого ввода\n";
 echo "Ожидаемый результат: Исключение с сообщением 'Empty input.'\n";
 
 try {
-    Validator::validate('');
+    BracketValidator::validate('');
     echo "❌ Тест НЕ ПРОЙДЕН (Исключение не выброшено)\n";
     $failed++;
 } catch (\InvalidArgumentException $e) {

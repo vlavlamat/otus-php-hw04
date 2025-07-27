@@ -18,6 +18,8 @@ services:
 
   php-fpm1:
     image: otus-php-hw04/php-fpm:dev
+    env_file:
+      - env/.env.dev
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests
@@ -29,6 +31,16 @@ services:
 
   php-fpm2:
     image: otus-php-hw04/php-fpm:dev
+    env_file:
+      - env/.env.dev
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./phpunit.xml:/app/phpunit.xml
+      - ./coverage:/app/coverage
+      - ./php/php.ini:/usr/local/etc/php/conf.d/local.ini
+    environment:
+      - COMPOSER_HOME=/var/www/.composer
 
   frontend:
     build:

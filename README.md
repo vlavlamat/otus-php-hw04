@@ -108,8 +108,8 @@ otus-php-hw04/
    - Отредактируйте `env/.env` файл, установив необходимые значения переменных
 
    ```bash
-   cp env/.env.dev.example env/.env
-   # Отредактируйте env/.env файл
+   cp env/.env.dev.dev.example env/.env.dev
+   # Отредактируйте env/.env.dev файл
    ```
 
 2. Для **prod-окружения**:
@@ -117,8 +117,8 @@ otus-php-hw04/
    - Отредактируйте `env/.env.prod` файл, установив необходимые значения переменных
 
    ```bash
-   cp env/.env.prod.example env/.env.prod
-   # Отредактируйте env/.env.prod файл
+   cp env/.env.dev.prod.example env/.env.dev.prod
+   # Отредактируйте env/.env.dev.prod файл
    ```
 
 ### Dev-режим (сборка и запуск всех сервисов с исходниками)
@@ -131,7 +131,7 @@ make dev-down     # Остановка dev-окружения
 ### Prod-режим (сборка и запуск production-образов)
 
 ```bash
-make prod-up      # Подтянуть и запустить production-образы с использованием env/.env.prod
+make prod-up      # Подтянуть и запустить production-образы с использованием env/.env.dev.prod
 make prod-down    # Остановка prod-окружения
 ```
 

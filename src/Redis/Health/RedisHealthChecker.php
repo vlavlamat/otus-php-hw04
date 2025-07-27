@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App;
+namespace App\Redis\Health;
 
+use Exception;
 use RedisCluster;
 use RedisClusterException;
-use Exception;
 
 /**
  * Класс RedisHealthChecker

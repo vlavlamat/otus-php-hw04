@@ -32,7 +32,7 @@ try {
 // Тестирование подключения с использованием RedisHealthChecker
 echo "\nТестирование подключения с использованием RedisHealthChecker...\n";
 try {
-    $healthChecker = new \App\RedisHealthChecker();
+    $healthChecker = new \App\Redis\Health\RedisHealthChecker();
 
     // Проверяем общее состояние кластера
     $isConnected = $healthChecker->isConnected();

@@ -2,9 +2,9 @@
 
 namespace Tests\Unit;
 
-use App\Router;
-use PHPUnit\Framework\TestCase;
+use App\Http\Router;
 use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
 
 class RouterTest extends TestCase
 {

@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\RedisHealthChecker;
+use App\Redis\Health\RedisHealthChecker;
 use PHPUnit\Framework\TestCase;
 use RedisClusterException;
 
