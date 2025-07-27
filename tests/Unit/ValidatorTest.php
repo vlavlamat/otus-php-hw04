@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Validator;
+use App\Validator\BracketValidator;
 use PHPUnit\Framework\TestCase;
 
 class ValidatorTest extends TestCase
@@ -14,7 +14,7 @@ class ValidatorTest extends TestCase
      */
     public function testValidBracketStrings(string $input): void
     {
-        $this->assertTrue(Validator::validate($input));
+        $this->assertTrue(BracketValidator::validate($input));
     }
 
     /**
@@ -24,7 +24,7 @@ class ValidatorTest extends TestCase
      */
     public function testInvalidBracketStrings(string $input): void
     {
-        $this->assertFalse(Validator::validate($input));
+        $this->assertFalse(BracketValidator::validate($input));
     }
 
     /**
@@ -35,7 +35,7 @@ class ValidatorTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Empty input.');
 
-        Validator::validate('');
+        BracketValidator::validate('');
     }
 
     /**

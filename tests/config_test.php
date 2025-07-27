@@ -58,7 +58,7 @@ echo "\n";
 echo "3. Тестирование RedisHealthChecker с конфигурацией...\n";
 try {
     // Создаем экземпляр без подключения к Redis (ожидаем ошибку подключения)
-    $healthChecker = new \App\RedisHealthChecker();
+    $healthChecker = new \App\Redis\Health\RedisHealthChecker();
     echo "❌ RedisHealthChecker создан, но ожидалась ошибка подключения\n";
     
 } catch (\RedisClusterException $e) {

@@ -2,14 +2,14 @@
 
 namespace Tests\Integration;
 
+use App\Http\Router;
+use App\Validator\BracketValidator;
 use PHPUnit\Framework\TestCase;
-use App\Router;
-use App\Validator;
 
 class ComponentIntegrationTest extends TestCase
 {
     /**
-     * Комплексный тест интеграции Router и Validator
+     * Комплексный тест интеграции Router и BracketValidator
      * 
      * Объединяет функциональность из нескольких тестов:
      * - Базовую валидацию скобочных строк
@@ -43,7 +43,7 @@ class ComponentIntegrationTest extends TestCase
             $results = [];
             foreach ($testData as $string) {
                 try {
-                    $isValid = Validator::validate($string);
+                    $isValid = BracketValidator::validate($string);
                     $results[] = [
                         'input' => $string,
                         'valid' => $isValid,
@@ -96,10 +96,10 @@ class ComponentIntegrationTest extends TestCase
     }
 
     /**
-     * Тест интеграции Router с различными HTTP методами и Validator
+     * Тест интеграции Router с различными HTTP методами и BracketValidator
      * 
      * Проверяет, что Router правильно обрабатывает разные HTTP методы
-     * при интеграции с Validator
+     * при интеграции с BracketValidator
      */
     public function testRouterHttpMethodsWithValidator(): void
     {
@@ -108,17 +108,17 @@ class ComponentIntegrationTest extends TestCase
 
         // Добавляем маршруты для разных методов
         $router->addRoute('GET', '/test', function () use ($testString) {
-            $isValid = Validator::validate($testString);
+            $isValid = BracketValidator::validate($testString);
             echo json_encode(['method' => 'GET', 'valid' => $isValid]);
         });
 
         $router->addRoute('POST', '/test', function () use ($testString) {
-            $isValid = Validator::validate($testString);
+            $isValid = BracketValidator::validate($testString);
             echo json_encode(['method' => 'POST', 'valid' => $isValid]);
         });
 
         $router->addRoute('PUT', '/test', function () use ($testString) {
-            $isValid = Validator::validate($testString);
+            $isValid = BracketValidator::validate($testString);
             echo json_encode(['method' => 'PUT', 'valid' => $isValid]);
         });
 
@@ -150,7 +150,7 @@ class ComponentIntegrationTest extends TestCase
     }
 
     /**
-     * Тест производительности интеграции Router + Validator
+     * Тест производительности интеграции Router + BracketValidator
      */
     public function testPerformanceIntegration(): void
     {
@@ -163,7 +163,7 @@ class ComponentIntegrationTest extends TestCase
             for ($i = 0; $i < 1000; $i++) {
                 $testString = str_repeat('(', $i % 10) . str_repeat(')', $i % 10);
                 try {
-                    Validator::validate($testString);
+                    BracketValidator::validate($testString);
                 } catch (\InvalidArgumentException $e) {
                     // Игнорируем исключения для пустых строк
                 }

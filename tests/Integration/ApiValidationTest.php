@@ -2,9 +2,9 @@
 
 namespace Tests\Integration;
 
+use App\Http\Router;
+use App\Validator\BracketValidator;
 use PHPUnit\Framework\TestCase;
-use App\Router;
-use App\Validator;
 
 class ApiValidationTest extends TestCase
 {
@@ -58,7 +58,7 @@ class ApiValidationTest extends TestCase
                     return;
                 }
 
-                $isValid = Validator::validate($string);
+                $isValid = BracketValidator::validate($string);
 
                 if ($isValid) {
                     echo json_encode([

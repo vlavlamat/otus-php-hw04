@@ -46,7 +46,7 @@ Thumbs.db
 desktop.ini
 
 # ▶️ Персональные и секретные конфиги
-env/.env
-.env.*
+env/.env.dev
+env/.env.prod
 !env/.env.prod.example
 !.env.prod.example
