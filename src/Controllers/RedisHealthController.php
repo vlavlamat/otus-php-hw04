@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use JsonException;
 use App\Http\JsonResponse;
 use App\Http\ResponseSender;
 use App\Redis\Health\RedisHealthChecker;
@@ -22,6 +23,8 @@ class RedisHealthController
 
     /**
      * Возвращает статус Redis Cluster
+     * @return void
+     * @throws JsonException
      */
     public function getStatus(): void
     {
