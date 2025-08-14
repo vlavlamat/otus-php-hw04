@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\PreflightResponse;
+
 /**
  * Middleware для обработки CORS заголовков
  *
@@ -17,7 +19,7 @@ class CorsMiddleware
      *
      * @return void
      */
-    public function handle(): void
+    public function handleHeaders(): void
     {
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
@@ -28,13 +30,20 @@ class CorsMiddleware
     /**
      * Обрабатывает OPTIONS запросы (preflight)
      *
-     * @return void
+     * @return PreflightResponse
      */
-    public function handlePreflight(): void
+    public function handlePreflight(): PreflightResponse
     {
-        $this->handle();
-        http_response_code(200);
-        exit();
+        return new PreflightResponse(
+            '',
+            200,
+            [
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Methods' => 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers' => 'Content-Type, Authorization',
+                'Access-Control-Max-Age' => '86400'
+            ]
+        );
     }
 
     /**

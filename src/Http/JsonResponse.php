@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http;
 
+use JsonException;
+
 /**
- * Класс для унифицированных JSON ответов
+ * Класс для формирования JSON ответов
  *
- * Инкапсулирует всю логику формирования и отправки JSON ответов.
- * Обеспечивает консистентность HTTP заголовков и форматирования.
+ * Инкапсулирует всю логику формирования JSON ответов.
  */
 class JsonResponse
 {
@@ -28,26 +29,28 @@ class JsonResponse
         $this->headers = $headers;
     }
 
-    /**
-     * Отправляет JSON ответ
-     *
-     * @return void
-     */
-    public function send(): void
+    public function getStatusCode(): int
     {
-        // Устанавливаем HTTP статус
-        http_response_code($this->statusCode);
+        return $this->statusCode;
+    }
 
-        // Устанавливаем основные заголовки
-        header('Content-Type: application/json; charset=utf-8');
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
 
-        // Устанавливаем дополнительные заголовки
-        foreach ($this->headers as $name => $value) {
-            header("$name: $value");
-        }
-
-        // Отправляем JSON
-        echo json_encode($this->data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    /**
+     * Кодирует данные ответа в JSON.
+     *
+     * @return string
+     * @throws JsonException
+     */
+    public function toJson(): string
+    {
+        return json_encode(
+            $this->data,
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT
+        );
     }
 
     /**
@@ -62,49 +65,27 @@ class JsonResponse
     }
 
     /**
+     * Создает неуспешный ответ
+     *
+     * @param array $data
+     * @return static
+     */
+    public static function failed(array $data): static
+    {
+        return new static($data, 400);
+    }
+
+    /**
      * Создает ответ с ошибкой
      *
      * @param string $message
-     * @param string $code
      * @param int $statusCode
      * @return static
      */
-    public static function error(string $message, string $code = 'ERROR', int $statusCode = 400): static
+    public static function error(string $message, int $statusCode = 400): static
     {
         return new static([
-            'error' => [
-                'message' => $message,
-                'code' => $code
-            ]
+            'error' => ['message' => $message]
         ], $statusCode);
-    }
-
-    /**
-     * Создает ответ для валидации email
-     *
-     * @param array $results
-     * @return static
-     */
-    public static function validation(array $results): static
-    {
-        return new static([
-            'results' => $results
-        ]);
-    }
-
-    /**
-     * Создает ответ для статуса системы
-     *
-     * @param string $status
-     * @param array $details
-     * @return static
-     */
-    public static function status(string $status, array $details = []): static
-    {
-        return new static([
-            'status' => $status,
-            'timestamp' => date('c'),
-            ...$details
-        ]);
     }
 }

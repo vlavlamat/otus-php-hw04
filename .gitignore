@@ -50,3 +50,9 @@ env/.env.dev
 env/.env.prod
 !env/.env.prod.example
 !.env.prod.example
+
+# Personal notes
+docs/memo-notes/*
+
+# Подготовка тестов
+docs/tests/*

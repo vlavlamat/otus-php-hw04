@@ -29,10 +29,6 @@ class EnvironmentLoader
         'REDIS_SESSION_LIFETIME',
         'REDIS_GC_PROBABILITY',
         'REDIS_GC_DIVISOR',
-        'REDIS_TLD_CACHE_TTL',
-        'REDIS_TLD_CACHE_PREFIX',
-        'REDIS_MX_CACHE_TTL',
-        'REDIS_MX_CACHE_PREFIX',
         'REDIS_CHECK_INTERVAL',
         'REDIS_PING_TIMEOUT',
         'APP_ENV',
@@ -78,7 +74,7 @@ class EnvironmentLoader
             }
         }
 
-        if (!empty($missing) || !empty($invalid)) {
+        if (!empty($missing) || !empty($empty)) {
             $errors = [];
 
             if (!empty($missing)) {
