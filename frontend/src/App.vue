@@ -86,27 +86,16 @@ let statusInterval = null
 const fetchRedisStatus = async () => {
   try {
     const response = await axios.get('/api/status') // Запрос к backend
-    redisStatus.value = response.data.redis_cluster  // Получаем поле redis_cluster
+    const {redis_cluster} = response.data
+    redisStatus.value = redis_cluster  // Получаем 'connected' или 'disconnected'
   } catch (error) {
-    // 🔍 Детальная обработка разных типов ошибок
-    if (error.code === 'NETWORK_ERROR' || !error.response) {
-      redisStatus.value = 'network_error'
-    } else if (error.response?.status >= 500) {
-      redisStatus.value = 'server_error'
-    } else if (error.response?.status === 404) {
-      redisStatus.value = 'api_not_found'
-    } else if (error.response?.status >= 400) {
-      redisStatus.value = 'client_error'
-    } else {
-      redisStatus.value = 'unknown_error'
-    }
+    // Единственная возможная ошибка - недоступность backend через nginx
+    redisStatus.value = 'backend_unavailable'
 
-    // 📝 Логируем для разработчика
-    console.error('Redis status error:', {
+    // Логируем для разработчика
+    console.error('Backend unavailable:', {
       message: error.message,
-      status: error.response?.status,
-      code: error.code,
-      url: error.config?.url
+      status: error.response?.status || 'No response'
     })
   } finally {
     // Устанавливаем флаг загрузки в false после получения статуса
@@ -137,46 +126,64 @@ const generate = () => {
 }
 
 /**
- * Обрабатывает ошибку API
- * @param {Error} error - Объект ошибки от axios
- * @returns {string} Сообщение об ошибке для отображения пользователю
- */
-const handleApiError = (error) => {
-  if (!error.response) {
-    return 'Ошибка сети или сервер недоступен'
-  }
-
-  const {status, data} = error.response
-  if (status === 400) {
-    const errorMessage = data.message || ''
-    return errorMessage.includes('Empty input')
-        ? 'Пустая строка! Status: 400 Bad Request.'
-        : 'Некорректная строка! Status: 400 Bad Request.'
-  }
-
-  return `Ошибка сервера: ${status}`
-}
-
-/**
  * Отправляет строку на сервер для проверки
  * @async
  */
-const submit = async () => {
-  const stringToSend = manualString.value
 
+const submit = async () => {
   try {
-    await axios.post('/api/validate', {
-      string: stringToSend
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
+    const {data, status} = await axios.post('/api/validate', {string: manualString.value});
+
+    // 200 OK - только valid
+    if (status === 200 && data?.status === 'valid') {
+      result.value = 'Корректная строка! Status: 200 OK.';
+      return;
+    }
+
+    // Нестандартный положительный ответ
+    result.value = 'Неожиданный ответ сервера.';
+  } catch (err) {
+    // Сетевая ошибка или сервер не ответил
+    if (!err.response) {
+      result.value = 'Ошибка сети или сервер недоступен';
+      return;
+    }
+
+    const {status, data} = err.response;
+
+    // 1) Бизнес-ошибки валидации: ожидаем поле data.status
+    if (data && typeof data === 'object' && 'status' in data) {
+      switch (data.status) {
+        case 'invalid':
+          result.value = 'Некорректная строка! Status: 400 Bad Request.';
+          return;
+        case 'empty':
+          result.value = 'Пустая строка! Status: 400 Bad Request.';
+          return;
+        case 'invalid_format':
+          result.value = 'Недопустимые символы! Status: 400 Bad Request.';
+          return;
       }
-    })
-    result.value = 'Корректная строка! Status: 200 OK.'
-  } catch (error) {
-    result.value = handleApiError(error)
+    }
+
+    // 2) Технические ошибки централизованного обработчика: {error: {message}}
+    const message = data?.error?.message || 'Неизвестная ошибка';
+
+    if (status === 400) {
+      // сюда попадает, например, "Некорректный JSON в запросе"
+      result.value = `Ошибка запроса: ${message}. Status: 400 Bad Request.`;
+      return;
+    }
+
+    if (status >= 500) {
+      result.value = `Ошибка сервера: ${message}. Status: ${status}.`;
+      return;
+    }
+
+    // Прочие случаи
+    result.value = `Ошибка: ${message}. Status: ${status}.`;
   }
-}
+};
 
 /**
  * Вычисляемые свойства
@@ -187,9 +194,12 @@ const submit = async () => {
  * @returns {string} CSS-класс (correct, incorrect или neutral)
  */
 const answerClass = computed(() => {
-  if (result.value.startsWith('Корректная строка')) {
+  // Приведение к строке для IDE
+  const resultText = String(result.value)
+
+  if (resultText.startsWith('Корректная строка')) {
     return 'correct'
-  } else if (result.value.startsWith('Некорректная строка') || result.value.startsWith('Пустая строка')) {
+  } else if (resultText.startsWith('Некорректная строка') || resultText.startsWith('Пустая строка')) {
     return 'incorrect'
   } else {
     return 'neutral'
@@ -205,11 +215,7 @@ const redisStatusClass = computed(() => {
     'Loading...': 'loading',
     'connected': 'correct',
     'disconnected': 'incorrect',
-    'network_error': 'network-error',
-    'server_error': 'server-error',
-    'api_not_found': 'api-error',
-    'client_error': 'client-error',
-    'unknown_error': 'unknown-error'
+    'backend_unavailable': 'backend-error'
   }
 
   return statusMap[redisStatus.value] || 'incorrect'
@@ -224,11 +230,7 @@ const redisStatusText = computed(() => {
     'Loading...': 'Loading...',
     'connected': 'Connected',
     'disconnected': 'Disconnected',
-    'network_error': 'Network Error',
-    'server_error': 'Server Error',
-    'api_not_found': 'API Not Found',
-    'client_error': 'Request Error',
-    'unknown_error': 'Unknown Error'
+    'backend_unavailable': 'Backend Unavailable'
   }
 
   return textMap[redisStatus.value] || 'Error'
@@ -252,11 +254,6 @@ h1 {
   font-size: 2rem; /* размер шрифта */
   margin-bottom: 1.5rem; /* отступ снизу */
   text-align: center; /* центрирование текста */
-}
-
-.mode-select label {
-  margin: 0 1rem; /* отступы между label */
-  font-size: 1.2rem;
 }
 
 /* Блок с полем ввода */
@@ -395,25 +392,9 @@ button:hover:enabled {
   color: red;
 }
 
-/* 🎨 Стили для разных типов ошибок */
-.redis-status span.network-error {
-  color: #ff6b35; /* Оранжевый для сетевых ошибок */
-}
-
-.redis-status span.server-error {
-  color: #dc3545; /* Красный для серверных ошибок */
-}
-
-.redis-status span.api-error {
-  color: #6f42c1; /* Фиолетовый для API ошибок */
-}
-
-.redis-status span.client-error {
-  color: #fd7e14; /* Оранжевый для клиентских ошибок */
-}
-
-.redis-status span.unknown-error {
-  color: #6c757d; /* Серый для неизвестных ошибок */
+.redis-status span.backend-error {
+  color: #ff6b35; /* ярко-оранжевый для недоступности backend */
+  animation: pulse 2s infinite; /* пульсирующая анимация для привлечения внимания */
 }
 
 @keyframes pulse {

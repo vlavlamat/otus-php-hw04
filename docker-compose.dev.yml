@@ -3,8 +3,6 @@ services:
     image: otus-php-hw04/nginx-proxy:dev
 
   nginx-backend1:
-    # Строим образ и монтируем тома ТОЛЬКО в первом backend-сервисе
-    # Этот образ будет использоваться всеми backend-репликами
     image: otus-php-hw04/nginx-backend:dev
     volumes:
       - ./nginx/backend/conf.d:/etc/nginx/conf.d:ro
@@ -12,9 +10,11 @@ services:
       - ./public:/app/public
 
   nginx-backend2:
-    # Используем готовый образ без повторной сборки
-    # Без volumes, чтобы не создавать конфликтов в dev-окружении
     image: otus-php-hw04/nginx-backend:dev
+    volumes:
+      - ./nginx/backend/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/backend/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./public:/app/public
 
   php-fpm1:
     image: otus-php-hw04/php-fpm:dev
@@ -23,9 +23,10 @@ services:
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests
+      - ./scripts:/app/scripts
       - ./phpunit.xml:/app/phpunit.xml
       - ./coverage:/app/coverage
-      - ./php/php.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./php/dev.php.ini:/usr/local/etc/php/conf.d/local.ini
     environment:
       - COMPOSER_HOME=/var/www/.composer
 
@@ -36,9 +37,10 @@ services:
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests
+      - ./scripts:/app/scripts
       - ./phpunit.xml:/app/phpunit.xml
       - ./coverage:/app/coverage
-      - ./php/php.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./php/dev.php.ini:/usr/local/etc/php/conf.d/local.ini
     environment:
       - COMPOSER_HOME=/var/www/.composer
 
