@@ -239,7 +239,7 @@ make prod-down   # остановка
 ## 10) Безопасность и ограничения
 
 - CORS обрабатывается на backend (GET, POST, OPTIONS; preflight 200). Прокси скрывает заголовки `Server`, `X-Powered-By`.
-- Нет sticky‑sessions — хранение сессий в Redis делает backend статeless с точки зрения HTTP‑сеанса.
+- Нет sticky‑sessions — хранение сессий в Redis делает backend stateless с точки зрения HTTP‑сеанса.
 - HTTPS не настроен (учебный проект локального запуска); добавление TLS возможно на уровне nginx-proxy.
 - Лимиты тела запроса и буферов настроены в nginx/backend/conf.d/default.conf.
 
