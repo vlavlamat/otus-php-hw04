@@ -1,147 +1,131 @@
-## 🏗️ Архитектура вашего проекта (снизу вверх)
+# 🏗️ Backend Architecture — Техническая детализация (для учебного мини‑проекта)
 
-### 1. **Value Objects & Base Models** (Базовые сущности)
-```
-App\Models\ValidationResult
-```
+Версия: 1.0
+Дата: 2025‑08‑14
 
-- Неизменяемый объект (immutable) с `readonly` полями
-- Содержит фабричные методы для создания результатов
-- Чистая доменная модель без зависимостей
+Документ описывает архитектуру backend части именно этого мини‑проекта «Валидация скобок». Цель — дать практическую, краткую и точную картину модулей, слоёв, middleware, жизненного цикла запроса и ключевых классов. Синхронизировано с README.md, docs/overview/* и реальным кодом в каталоге src/.
 
-### 2. **Interfaces & Abstractions** (Контракты)
-```
-App\Interfaces\ValidationInterface
-```
+## 1) Модули и их ответственность
 
-- Определяет контракт для валидации скобок
-- Обеспечивает инверсию зависимостей
+- Validation (валидация скобок)
+  - Контроллер: App\Controllers\ValidationController
+  - Сервис приложения: App\Services\ValidationService
+  - Валидаторы (доменная логика):
+    - App\Validator\FormatValidator — trim, пустота, допустимые символы "(" и ")", ограничение длины (≤ 30)
+    - App\Validator\BracketValidator — проверка баланса скобок (односканерный алгоритм)
+  - Модель-DTO: App\Models\ValidationResult — неизменяемый Value Object со статусами: valid, invalid, empty, invalid_format
 
-### 3. **Domain Services** (Доменные сервисы)
-```
-App\Validator\BracketValidator
-```
+- Health (инфраструктурное здоровье Redis Cluster)
+  - Контроллер: App\Controllers\RedisHealthController
+  - Сервис инфраструктуры: App\Redis\Health\RedisHealthChecker — подсчёт доступных узлов и сравнение с кворумом
+  - Конфигурация: config/redis.php (узлы, кворум, таймауты, префикс и др.)
 
-- Реализует бизнес-логику валидации скобок
-- Не зависит от инфраструктуры
-- Возвращает доменные объекты
+- HTTP/Core (каркас приложения)
+  - Точка входа: public/index.php
+  - Bootstrap: App\Bootstrap\EnvironmentLoader — загрузка .env и базовых настроек
+  - Каркас/ядро: App\Core\App — инициализация, регистрация middleware и маршрутов, запуск
+  - Роутер: App\Core\Router — таблица маршрутов, диспатч контроллеров по методу/пути
+  - Исключения: App\Core\ExceptionHandler — централизованная обработка исключений → стандартизованные JSON‑ответы
+  - HTTP слой: App\Http\JsonResponse, App\Http\PreflightResponse, App\Http\ResponseSender
+  - Middleware: App\Http\Middleware\CorsMiddleware — CORS и обработка OPTIONS
 
-### 4. **Application Services** (Сервисы приложения)
-```
-App\Services\BracketValidationService
-App\Redis\Health\RedisHealthChecker (подразумевается)
-```
+## 2) Слои архитектуры (зависимости снизу вверх)
 
-- Оркестрируют бизнес-процессы
-- Используют доменные сервисы
-- Содержат application-логику
+- Domain Core
+  - Value Object: App\Models\ValidationResult (чистый, без инфраструктурных зависимостей)
+  - Доменные алгоритмы: App\Validator\FormatValidator, App\Validator\BracketValidator
 
-### 5. **Infrastructure Layer** (Инфраструктурный слой)
-```
-App\Bootstrap\EnvironmentLoader
-App\Http\Middleware\CorsMiddleware
-```
+- Application Services
+  - App\Services\ValidationService — оркестрация валидации: сперва формат, затем баланс; возвращает ValidationResult
+  - App\Redis\Health\RedisHealthChecker — инфраструктурная проверка, используется в контроллере статуса
 
-- Конфигурация и загрузка окружения
-- Обработка HTTP middleware
+- Presentation (HTTP)
+  - Контроллеры: ValidationController, RedisHealthController — преобразуют вход/выход HTTP ↔ доменные объекты/DTO
+  - Ответы: JsonResponse, PreflightResponse, отправка через ResponseSender
 
-### 6. **Presentation Layer** (Слой представления)
-```
-App\Controllers\ValidationController
-App\Controllers\RedisHealthController
-App\Http\JsonResponse (подразумевается)
-```
+- Infrastructure
+  - EnvironmentLoader, CorsMiddleware, конфигурация Redis (config/redis.php)
 
-- HTTP контроллеры
-- Обработка запросов и ответов
+- Framework/Core
+  - App, Router, ExceptionHandler
 
-### 7. **Framework & Routing** (Фреймворк и маршрутизация)
-```
-App\Core\App
-App\Core\Router
-```
+## 3) Жизненный цикл HTTP‑запроса
 
-- Точка входа приложения
-- Маршрутизация HTTP запросов
+1. Запрос приходит на Nginx proxy по пути /api/* и проксируется к backend, префикс /api снимается.
+2. В public/index.php создаётся App, загружается окружение (EnvironmentLoader), регистрируются маршруты и middleware.
+3. Router сопоставляет метод/путь и формирует обработчик контроллера. До контроллера вызываются глобальные middleware:
+   - CorsMiddleware: устанавливает заголовки CORS; если метод OPTIONS — немедленно возвращает PreflightResponse (200).
+4. Контроллер обрабатывает запрос:
+   - ValidationController: читает JSON, валидирует наличие и тип поля string; вызывает ValidationService → получает ValidationResult → формирует JsonResponse со статусом и кодом (200 для valid, иначе 400 для empty/invalid_format/invalid). Ошибки запроса (нет поля/не строка/невалидный JSON) → 400 { error.message }.
+   - RedisHealthController: вызывает RedisHealthChecker → { redis_cluster: connected|disconnected } (всегда 200).
+5. Ответ отправляется через ResponseSender. Необработанные исключения перехватываются ExceptionHandler и переводятся в предсказуемые JSON‑ошибки.
 
-### 8. **Frontend Layer** (Фронтенд)
-```
-Vue.js компонент (App.vue)
-```
+## 4) Маршруты (внутренние пути в приложении)
 
-- Пользовательский интерфейс
-- Взаимодействие с API
+- POST /validate → App\Controllers\ValidationController::validate
+- GET  /status   → App\Controllers\RedisHealthController::status
 
-## 📋 Слои архитектуры (по порядку зависимостей)
+Примечание: внешние клиенты обращаются к POST /api/validate и GET /api/status — префикс /api удаляется прокси.
 
-### **Layer 1: Domain Core**
-- `ValidationResult` (Value Object)
-- `ValidationInterface` (Domain Contract)
+## 5) Middleware и CORS
 
-### **Layer 2: Domain Services**
-- `BracketValidator` (Domain Logic)
+- App\Http\Middleware\CorsMiddleware
+  - Разрешённые методы: GET, POST, OPTIONS
+  - Разрешённые заголовки: Content-Type, Authorization
+  - Для OPTIONS возвращает 200 PreflightResponse с нужными заголовками
+  - Для остальных методов добавляет CORS‑заголовки к JsonResponse
 
-### **Layer 3: Application Services**
-- `BracketValidationService` (Application Orchestration)
-- `RedisHealthChecker` (Infrastructure Service)
+## 6) Валидация и статусы
 
-### **Layer 4: Infrastructure**
-- `EnvironmentLoader` (Configuration)
-- `CorsMiddleware` (HTTP Infrastructure)
+- Порядок: ValidationService → FormatValidator → BracketValidator
+- Правила формата (FormatValidator): trim; пустая строка → status=empty (400);
+  допустимы только "(" и ")"; длина ≤ 30; нарушение правил → status=invalid_format (400)
+- Баланс (BracketValidator): односканерный алгоритм → status=valid (200) или invalid (400)
+- DTO: ValidationResult (readonly; статические конструкторы для статусов)
 
-### **Layer 5: Presentation**
-- `ValidationController` (HTTP Handler)
-- `RedisHealthController` (HTTP Handler)
+## 7) Обработка ошибок
 
-### **Layer 6: Framework**
-- `Router` (Request Routing)
-- `App` (Application Bootstrap)
+- JSON‑парсер/ошибка запроса (нет поля string или тип не строка) → 400 { error: { message: "Поле \"string\" обязательно и должно быть строкой" } }
+- Неожиданные исключения → 500 { error: { message: "Internal Server Error" } } (точный формат определяется ExceptionHandler)
+- Все ответы стандартизованы через JsonResponse/ResponseSender; preflight всегда 200
 
-### **Layer 7: UI**
-- Vue.js Frontend
+## 8) Конфигурация и окружение
 
-## 🎯 Соответствие принципам Laravel-архитектуры
+- .env.*: переменные окружения для dev/prod (см. env/.env.*.example)
+- App\Bootstrap\EnvironmentLoader: загрузка env и настройка PHP окружения
+- config/redis.php: список узлов кластера, кворум, таймауты, префикс сессий
+- PHP сессии: php/conf.d/session.redis.ini указывает session.save_handler=rediscluster и session.save_path с seed[] узлов
 
-✅ **Что хорошо реализовано:**
-- Чистые Value Objects без зависимостей
-- Интерфейсы для инверсии зависимостей
-- Сервисы приложения с фабричными методами
-- Разделение доменной и application логики
-- Middleware для инфраструктурных задач
+## 9) Тестирование (применительно к слоям)
 
-🔄 **Что можно улучшить для полного соответствия Laravel:**
+- Unit: алгоритмы FormatValidator и BracketValidator, DTO ValidationResult
+- Integration: контроллеры через роутер (POST /validate, GET /status), preflight OPTIONS
+- Покрытие: make test-coverage → ./coverage (PCOV в dev)
 
-1. **Добавить Repository слой:**
-```php
-// App\Repositories\ValidationRepository
-interface ValidationRepositoryInterface 
-{
-    public function save(ValidationResult $result): void;
-    public function findByBrackets(string $brackets): ?ValidationResult;
-}
-```
+## 10) Соответствие принципам (микро‑DDD / Clean)
 
+- Чистое доменное ядро (DTO + алгоритмы) без инфраструктурных зависимостей
+- Оркестрация в Application Service; контроллеры тонкие
+- Инфраструктурные детали (CORS, env, Redis) отделены от домена
+- Простая инверсия зависимостей через явные создания (без контейнера DI — для простоты учебного проекта)
 
-2. **Добавить Form Requests:**
-```php
-// App\Http\Requests\ValidateBracketsRequest
-class ValidateBracketsRequest 
-{
-    public function rules(): array;
-    public function validate(): array;
-}
-```
+## 11) Возможные улучшения (опционально)
 
+- Service Container: простой контейнер для биндингов интерфейсов/реализаций
+- Form Request объект для валидации входного JSON
+- Логгер и корелляция запросов (request id) в JsonResponse
+- Rate limiting middleware на уровне backend (или посредством Nginx)
+- Repository слой — если появится БД и необходимость хранить историю проверок
 
-3. **Использовать Service Container:**
-```php
-// App\Container\Container
-class Container 
-{
-    public function bind(string $abstract, callable $concrete): void;
-    public function resolve(string $abstract): mixed;
-}
-```
+## 12) Соответствие исходному коду (map → src/)
 
+- src/Controllers: ValidationController, RedisHealthController
+- src/Services: ValidationService
+- src/Validator: FormatValidator, BracketValidator
+- src/Models: ValidationResult
+- src/Redis/Health: RedisHealthChecker
+- src/Http: JsonResponse, PreflightResponse, ResponseSender, Middleware/CorsMiddleware
+- src/Core: App, Router, ExceptionHandler
+- src/Bootstrap: EnvironmentLoader
 
-Ваша архитектура уже очень близка к правильной DDD/Clean Architecture с принципами Laravel. Основные принципы соблюдены: движение снизу вверх по зависимостям, чистое ядро, инверсия зависимостей через интерфейсы.
+Эта архитектура отражает текущую реализацию проекта и ограничена учебным MVP: база данных, аутентификация, платёжные интеграции и сложная наблюдаемость не входят в состав.
