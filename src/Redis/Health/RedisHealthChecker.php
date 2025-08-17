@@ -14,7 +14,7 @@ use RedisClusterException;
  * Предоставляет методы для мониторинга доступности узлов кластера
  * и определения общего состояния кластера на основе кворума.
  */
-class RedisHealthChecker
+final class RedisHealthChecker
 {
     private RedisCluster $cluster;
     private array $config;
