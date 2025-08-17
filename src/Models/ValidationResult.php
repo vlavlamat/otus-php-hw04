@@ -11,7 +11,7 @@ namespace App\Models;
  * Предоставляет типизированные методы для создания различных типов результатов
  * и проверки состояния валидации.
  */
-class ValidationResult
+final class ValidationResult
 {
     /**
      * Возможные статусы валидации

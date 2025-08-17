@@ -10,7 +10,7 @@ use App\Models\ValidationResult;
  * Валидатор баланса скобок
  * Проверяет корректность последовательности скобок
  */
-class BracketValidator
+final class BracketValidator
 {
     /**
      * Валидирует баланс скобок

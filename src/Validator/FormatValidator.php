@@ -10,7 +10,7 @@ use App\Models\ValidationResult;
  * Валидатор формата строки скобок
  * Проверяет нормализацию, пустоту и наличие только допустимых символов
  */
-class FormatValidator
+final class FormatValidator
 {
     private const MAX_LENGTH = 30;
 

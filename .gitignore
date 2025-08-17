@@ -55,4 +55,4 @@ env/.env.prod
 docs/memo-notes/*
 
 # Подготовка тестов
-docs/tests/*
+!docs/tests/*
